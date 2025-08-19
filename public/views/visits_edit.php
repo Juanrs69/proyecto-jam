@@ -11,6 +11,7 @@
     <?php endif; ?>
     <?php if ($visita): ?>
     <form method="post" action="<?= $GLOBALS['basePath'] ?>/visits/<?= urlencode($visita['id']) ?>/edit">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
         <label>Motivo:
             <input type="text" name="motivo" value="<?= htmlspecialchars($visita['motivo']) ?>" required>
         </label><br>

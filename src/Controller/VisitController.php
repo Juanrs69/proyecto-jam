@@ -46,6 +46,13 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $csrf = $_POST['csrf_token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            $error = "Solicitud inválida (CSRF).";
+            ob_start();
+            include __DIR__ . '/../../public/views/visits_create.php';
+            return ob_get_clean();
+        }
 
         $motivo = $_POST['motivo'] ?? '';
         $fecha = $_POST['fecha'] ?? '';
@@ -107,6 +114,16 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $csrf = $_POST['csrf_token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            $error = "Solicitud inválida (CSRF).";
+            $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
+            $stmt->execute([$id]);
+            $visita = $stmt->fetch();
+            ob_start();
+            include __DIR__ . '/../../public/views/visits_edit.php';
+            return ob_get_clean();
+        }
 
         $motivo = $_POST['motivo'] ?? '';
         $fecha = $_POST['fecha'] ?? '';
@@ -134,6 +151,12 @@ class VisitController
         session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
+            exit;
+        }
+        $csrf = $_POST['csrf_token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            http_response_code(400);
+            echo "Solicitud inválida (CSRF).";
             exit;
         }
         $stmt = $this->pdo->prepare("DELETE FROM visitas WHERE id = ?");

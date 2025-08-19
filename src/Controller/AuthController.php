@@ -10,98 +10,239 @@ class AuthController
         $this->pdo = $pdo;
     }
 
-    public function showLogin()
+    /**
+     * Mostrar formulario de login.
+     * Genera token CSRF y pasa variables a la vista.
+     */
+    public function showLogin(): string
     {
+        // iniciar sesión para gestionar CSRF y retener email si hace falta
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+        }
+
+        // Variables que la vista espera: $error, $email (si hubo post previo)
+        $error = $GLOBALS['login_error'] ?? null;
+        $email = $GLOBALS['login_email'] ?? '';
+
+        // incluir vista
         ob_start();
         include __DIR__ . '/../../public/views/login.php';
         return ob_get_clean();
     }
 
+    /**
+     * Procesar login (POST)
+     * - Validaciones básicas
+     * - Verifica CSRF si existe token en sesión
+     * - password_verify + session_regenerate_id
+     */
     public function login()
     {
-        session_start();
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
-
-        // Buscar usuario por correo
-        $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE correo = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-
-        if ($user && password_verify($password, $user['hash_contrasena'])) {
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'nombre' => $user['nombre'],
-                'rol' => $user['rol']
-            ];
-            header('Location: /panel');
+        // Aseguramos que sea POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('HTTP/1.1 405 Method Not Allowed');
+            echo 'Método no permitido';
             exit;
         }
 
-        // Si falla, vuelve al login con mensaje
-        $error = "Credenciales inválidas";
-        ob_start();
-        include __DIR__ . '/../../public/views/login.php';
-        return ob_get_clean();
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        // Lectura y saneamiento
+        $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
+        $csrf = $_POST['csrf_token'] ?? '';
+
+        // Comprobación CSRF (si se usa)
+        if (!empty($_SESSION['csrf_token'])) {
+            if (empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+                $error = "Solicitud inválida (CSRF). Intente de nuevo.";
+                $GLOBALS['login_error'] = $error;
+                $GLOBALS['login_email'] = $email;
+                return $this->showLogin();
+            }
+        }
+
+        // Validaciones
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
+            $error = "Ingrese un correo válido y la contraseña.";
+            $GLOBALS['login_error'] = $error;
+            $GLOBALS['login_email'] = $email;
+            return $this->showLogin();
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("SELECT id, nombre, correo, hash_contrasena, rol FROM usuarios WHERE correo = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+
+            if ($user && password_verify($password, $user['hash_contrasena'])) {
+                // Login correcto
+                session_regenerate_id(true);
+                $_SESSION['user'] = [
+                    'id'     => $user['id'],
+                    'nombre' => $user['nombre'],
+                    'rol'    => $user['rol'],
+                    'correo' => $user['correo']
+                ];
+
+                // Redirigir a /visits (o panel) respetando basePath
+                $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+                $location = ($bp === '') ? '/visits' : $bp . '/visits';
+                header('Location: ' . $location);
+                exit;
+            }
+
+            // Credenciales inválidas
+            $error = "Correo o contraseña incorrectos.";
+            $GLOBALS['login_error'] = $error;
+            $GLOBALS['login_email'] = $email;
+            return $this->showLogin();
+
+        } catch (\Throwable $e) {
+            // Registro en log y mensaje genérico
+            error_log("[AuthController] Error login: " . $e->getMessage());
+            $error = "Error interno. Intente más tarde.";
+            $GLOBALS['login_error'] = $error;
+            $GLOBALS['login_email'] = $email;
+            return $this->showLogin();
+        }
     }
 
+    /**
+     * Logout
+     */
     public function logout()
     {
-        session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
         session_destroy();
-        header('Location: /login');
+
+        $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+        $location = ($bp === '') ? '/login' : $bp . '/login';
+        header('Location: ' . $location);
         exit;
     }
 
-    public function panel()
+    /**
+     * Panel (ejemplo protegido)
+     */
+    public function panel(): string
     {
-        session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
         if (!isset($_SESSION['user'])) {
-            header('Location: /login');
+            $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+            $location = ($bp === '') ? '/login' : $bp . '/login';
+            header('Location: ' . $location);
             exit;
         }
         return "<h2>Bienvenido al panel privado, " . htmlspecialchars($_SESSION['user']['nombre']) . "</h2>";
     }
 
-    public function showRegister()
+    /**
+     * Mostrar registro
+     */
+    public function showRegister(): string
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+        }
+
+        $error = $GLOBALS['register_error'] ?? null;
+        $old = $GLOBALS['register_old'] ?? [];
+
         ob_start();
         include __DIR__ . '/../../public/views/register.php';
         return ob_get_clean();
     }
 
+    /**
+     * Registrar nuevo usuario
+     */
     public function register()
     {
-        $nombre = $_POST['nombre'] ?? '';
-        $correo = $_POST['email'] ?? '';
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('HTTP/1.1 405 Method Not Allowed');
+            echo 'Método no permitido';
+            exit;
+        }
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        $nombre = trim($_POST['nombre'] ?? '');
+        $correo = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-        $rol = 'usuario';
+        $csrf = $_POST['csrf_token'] ?? '';
 
-        // Validación simple
-        if (!$nombre || !$correo || !$password) {
-            $error = "Todos los campos son obligatorios";
-            ob_start();
-            include __DIR__ . '/../../public/views/register.php';
-            return ob_get_clean();
+        // CSRF
+        if (!empty($_SESSION['csrf_token'])) {
+            if (empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+                $error = "Solicitud inválida (CSRF).";
+                $GLOBALS['register_error'] = $error;
+                $GLOBALS['register_old'] = ['nombre'=>$nombre, 'email'=>$correo];
+                return $this->showRegister();
+            }
         }
 
-        // Verifica si el correo ya existe
-        $stmt = $this->pdo->prepare("SELECT id FROM usuarios WHERE correo = ?");
-        $stmt->execute([$correo]);
-        if ($stmt->fetch()) {
-            $error = "El correo ya está registrado";
-            ob_start();
-            include __DIR__ . '/../../public/views/register.php';
-            return ob_get_clean();
+        // Validaciones básicas
+        if ($nombre === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL) || $password === '') {
+            $error = "Todos los campos son obligatorios y el correo debe ser válido.";
+            $GLOBALS['register_error'] = $error;
+            $GLOBALS['register_old'] = ['nombre'=>$nombre, 'email'=>$correo];
+            return $this->showRegister();
         }
 
-        // Inserta el usuario
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->pdo->prepare("INSERT INTO usuarios (nombre, correo, hash_contrasena, rol) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$nombre, $correo, $hash, $rol]);
+        try {
+            // Verificar existencia
+            $stmt = $this->pdo->prepare("SELECT id FROM usuarios WHERE correo = ?");
+            $stmt->execute([$correo]);
+            if ($stmt->fetch()) {
+                $error = "El correo ya está registrado.";
+                $GLOBALS['register_error'] = $error;
+                $GLOBALS['register_old'] = ['nombre'=>$nombre, 'email'=>$correo];
+                return $this->showRegister();
+            }
 
-        // Redirige al login
-        header('Location: /login');
-        exit;
+            // Insertar (incluyendo id)
+            $id = bin2hex(random_bytes(16));
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $this->pdo->prepare("INSERT INTO usuarios (id, nombre, correo, hash_contrasena, rol) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$id, $nombre, $correo, $hash, 'usuario']);
+
+            // Redirigir al login
+            $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+            $location = ($bp === '') ? '/login' : $bp . '/login';
+            header('Location: ' . $location);
+            exit;
+
+        } catch (\Throwable $e) {
+            error_log("[AuthController] Error register: " . $e->getMessage());
+            $error = "Error interno. Intente más tarde.";
+            $GLOBALS['register_error'] = $error;
+            $GLOBALS['register_old'] = ['nombre'=>$nombre, 'email'=>$correo];
+            return $this->showRegister();
+        }
     }
 }

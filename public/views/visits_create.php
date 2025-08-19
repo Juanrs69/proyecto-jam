@@ -10,6 +10,7 @@
         <p style="color:red"><?= htmlspecialchars($error) ?></p>
     <?php endif; ?>
     <form method="post" action="<?= $GLOBALS['basePath'] ?>/visits">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
         <label>Motivo:
             <input type="text" name="motivo" required>
         </label><br>
@@ -24,10 +25,3 @@
     <p><a href="<?= $GLOBALS['basePath'] ?>/visits">Volver al listado</a></p>
 </body>
 </html>
-git config --global user.name "Juanrs69"
-git config --global user.email "juanalejandro004@gmail.com"
-
-
-git add .
-git commit -m "Mensaje corto pero claro"
-git push

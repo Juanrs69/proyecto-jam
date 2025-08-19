@@ -31,6 +31,7 @@
                             <a href="<?= $GLOBALS['basePath'] ?>/visits/<?= urlencode($visita['id']) ?>/edit">Editar</a>
                             |
                             <form action="<?= $GLOBALS['basePath'] ?>/visits/<?= urlencode($visita['id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('¿Seguro que deseas eliminar esta visita?');">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                                 <button type="submit">Eliminar</button>
                             </form>
                         </td>

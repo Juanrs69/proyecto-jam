@@ -33,8 +33,7 @@
     ?>
 
     <form method="post" action="<?= htmlspecialchars($action) ?>" autocomplete="on" novalidate>
-      <!-- CSRF: descomenta y genera token en controlador -->
-      <!-- <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>"> -->
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
       <label for="email">Correo</label>
       <input id="email" type="email" name="email" required value="<?= htmlspecialchars($emailValue) ?>" autofocus>
@@ -50,4 +49,5 @@
     </p>
   </div>
 </body>
+</html>
 </html>
