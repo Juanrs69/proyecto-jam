@@ -26,3 +26,8 @@
 </html>
 git config --global user.name "Juanrs69"
 git config --global user.email "juanalejandro004@gmail.com"
+
+
+git remote add origin https://github.com/Juanrs69/proyecto-jam
+git branch -M main
+git push -u origin main
