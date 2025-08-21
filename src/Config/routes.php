@@ -10,20 +10,20 @@ return [
         '/panel'         => [AuthController::class, 'panel'],
         '/register'      => [AuthController::class, 'showRegister'],
         '/visits'        => [VisitController::class, 'index'],
-        '/visits/create' => [VisitController::class, 'showCreateForm'], // NUEVA RUTA
+        '/visits/create' => [VisitController::class, 'showCreateForm'],
     ],
     'POST' => [
         '/login'    => [AuthController::class, 'login'],
         '/register' => [AuthController::class, 'register'],
-        '/visits'        => [VisitController::class, 'store'], // NUEVA RUTA
+        '/visits'   => [VisitController::class, 'store'],
     ],
     // Rutas con parámetros
     'GET_PARAM' => [
-        '/visits/{id}'    => [VisitController::class, 'show'], // NUEVA RUTA
-        '/visits/{id}/edit' => [VisitController::class, 'showEditForm'], // NUEVA RUTA
+        '/visits/{id}'        => [VisitController::class, 'show'],
+        '/visits/{id}/edit'   => [VisitController::class, 'showEditForm'],
     ],
     'POST_PARAM' => [
-        '/visits/{id}/edit'   => [VisitController::class, 'update'], // NUEVA RUTA
-        '/visits/{id}/delete' => [VisitController::class, 'delete'], // NUEVA RUTA
+        '/visits/{id}/edit'   => [VisitController::class, 'update'],
+        '/visits/{id}/delete' => [VisitController::class, 'delete'],
     ],
 ];

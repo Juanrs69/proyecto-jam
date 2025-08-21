@@ -34,6 +34,10 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        // Obtener todos los visitantes
+        $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
+        $visitantes = $stmt->fetchAll();
+
         ob_start();
         include __DIR__ . '/../../public/views/visits_create.php';
         return ob_get_clean();
@@ -101,6 +105,10 @@ class VisitController
         $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
         $stmt->execute([$id]);
         $visita = $stmt->fetch();
+
+        // Obtener todos los visitantes
+        $stmt2 = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
+        $visitantes = $stmt2->fetchAll();
 
         ob_start();
         include __DIR__ . '/../../public/views/visits_edit.php';

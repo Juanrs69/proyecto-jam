@@ -18,8 +18,15 @@
         <label>Fecha:
             <input type="datetime-local" name="fecha" value="<?= date('Y-m-d\TH:i', strtotime($visita['fecha'])) ?>" required>
         </label><br>
-        <label>ID Visitante:
-            <input type="number" name="visitante" value="<?= htmlspecialchars($visita['visitante_id']) ?>" required>
+        <label>Visitante:
+            <select name="visitante" required>
+                <option value="">Seleccione un visitante</option>
+                <?php foreach ($visitantes as $v): ?>
+                    <option value="<?= htmlspecialchars($v['id']) ?>" <?= $visita['visitante_id'] == $v['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($v['nombre']) ?> (ID: <?= htmlspecialchars($v['id']) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </label><br>
         <button type="submit">Guardar cambios</button>
     </form>
