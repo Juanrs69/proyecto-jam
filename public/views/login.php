@@ -4,50 +4,35 @@
     <meta charset="UTF-8">
     <title>Iniciar sesión - VisitaSegura</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <style>
-      /* Estilos mínimos para que se vea aceptable sin Tailwind */
-      body { font-family: Arial, Helvetica, sans-serif; background:#f3f4f6; padding:30px; }
-      .card{ background:#fff; max-width:420px; margin:0 auto; padding:20px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.05);}
-      label{ display:block; margin:10px 0 4px; font-weight:600; }
-      input{ width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:4px; }
-      button{ margin-top:12px; width:100%; padding:10px; background:#2563eb;color:#fff;border:none;border-radius:4px; cursor:pointer;}
-      .error{ background:#fee2e2; color:#b91c1c; padding:8px; border-radius:4px; margin-bottom:8px;}
-      .small{ font-size:13px; color:#6b7280; margin-top:8px; text-align:center;}
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="card" role="main" aria-labelledby="h1">
-    <h2 id="h1">Iniciar sesión</h2>
-
+<body class="bg-gray-100 min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="card shadow p-4 w-100" style="max-width: 400px;">
+    <h2 class="mb-4 text-center text-primary">Iniciar sesión</h2>
     <?php if (!empty($error)): ?>
-      <div class="error" role="alert"><?= htmlspecialchars($error) ?></div>
+      <div class="alert alert-danger" role="alert"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
-
     <?php
-      // Base path seguro (evita '//login' si basePath está vacío)
       $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
       $action = ($bp === '') ? '/login' : $bp . '/login';
-
-      // Mantener el email en caso de fallo (si el controlador lo pasa)
       $emailValue = isset($email) ? $email : (isset($_POST['email']) ? $_POST['email'] : '');
     ?>
-
     <form method="post" action="<?= htmlspecialchars($action) ?>" autocomplete="on" novalidate>
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-
-      <label for="email">Correo</label>
-      <input id="email" type="email" name="email" required value="<?= htmlspecialchars($emailValue) ?>" autofocus>
-
-      <label for="password">Contraseña</label>
-      <input id="password" type="password" name="password" required>
-
-      <button type="submit">Entrar</button>
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo</label>
+        <input id="email" type="email" name="email" class="form-control" required value="<?= htmlspecialchars($emailValue) ?>" autofocus>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input id="password" type="password" name="password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Entrar</button>
     </form>
-
-    <p class="small">
-      <a href="<?= htmlspecialchars(($bp === '')? '/register' : $bp . '/register') ?>">¿No tienes cuenta? Regístrate</a>
+    <p class="text-center mt-3 small">
+      <a href="<?= htmlspecialchars(($bp === '')? '/register' : $bp . '/register') ?>" class="text-decoration-none text-secondary">¿No tienes cuenta? Regístrate</a>
     </p>
   </div>
 </body>
-</html>
 </html>

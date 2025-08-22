@@ -74,7 +74,8 @@ class VisitController
         $stmt = $this->pdo->prepare("INSERT INTO visitas (visitante_id, fecha, motivo) VALUES (?, ?, ?)");
         $stmt->execute([$visitante, $fecha, $motivo]);
 
-        header('Location: ' . $GLOBALS['basePath'] . '/visits');
+        // Redirigir al panel después de crear
+        header('Location: ' . $GLOBALS['basePath'] . '/panel');
         exit;
     }
 
@@ -150,7 +151,8 @@ class VisitController
         $stmt = $this->pdo->prepare("UPDATE visitas SET visitante_id = ?, fecha = ?, motivo = ? WHERE id = ?");
         $stmt->execute([$visitante, $fecha, $motivo, $id]);
 
-        header('Location: ' . $GLOBALS['basePath'] . '/visits/' . $id);
+        // Redirigir al panel después de editar
+        header('Location: ' . $GLOBALS['basePath'] . '/panel');
         exit;
     }
 
@@ -169,7 +171,8 @@ class VisitController
         }
         $stmt = $this->pdo->prepare("DELETE FROM visitas WHERE id = ?");
         $stmt->execute([$id]);
-        header('Location: ' . $GLOBALS['basePath'] . '/visits');
+        // Redirigir al panel después de eliminar
+        header('Location: ' . $GLOBALS['basePath'] . '/panel');
         exit;
     }
 }

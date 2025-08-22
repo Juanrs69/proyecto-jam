@@ -3,22 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Crear visita</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h2>Crear nueva visita</h2>
+<body class="bg-gray-100 min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="card shadow p-4 w-100" style="max-width: 500px;">
+    <h2 class="mb-4 text-center text-primary">Crear nueva visita</h2>
     <?php if (isset($error)): ?>
-        <p style="color:red"><?= htmlspecialchars($error) ?></p>
+        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
     <form method="post" action="<?= $GLOBALS['basePath'] ?>/visits">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-        <label>Motivo:
-            <input type="text" name="motivo" required>
-        </label><br>
-        <label>Fecha:
-            <input type="datetime-local" name="fecha" required>
-        </label><br>
-        <label>Visitante:
-            <select name="visitante" required>
+        <div class="mb-3">
+            <label class="form-label">Motivo</label>
+            <input type="text" name="motivo" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Fecha</label>
+            <input type="datetime-local" name="fecha" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Visitante</label>
+            <select name="visitante" class="form-select" required>
                 <option value="">Seleccione un visitante</option>
                 <?php foreach ($visitantes as $v): ?>
                     <option value="<?= htmlspecialchars($v['id']) ?>">
@@ -26,9 +33,12 @@
                     </option>
                 <?php endforeach; ?>
             </select>
-        </label><br>
-        <button type="submit">Guardar</button>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Guardar</button>
     </form>
-    <p><a href="<?= $GLOBALS['basePath'] ?>/visits">Volver al listado</a></p>
+    <p class="text-center mt-3">
+        <a href="<?= $GLOBALS['basePath'] ?>/visits" class="text-decoration-none text-secondary">Volver al listado</a>
+    </p>
+  </div>
 </body>
 </html>
