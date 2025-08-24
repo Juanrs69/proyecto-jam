@@ -25,6 +25,7 @@ return [
     // Rutas con parámetros
     'GET_PARAM' => [
         '/visits/{id}'        => [VisitController::class, 'show'],
+        '/visits/{id}/edit'   => [VisitController::class, 'showEditForm'],
         '/visitantes/{id}'    => [VisitorController::class, 'show'],
     ],
     'POST_PARAM' => [

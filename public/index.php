@@ -1,25 +1,29 @@
 <?php declare(strict_types=1);
 
 // public/index.php - Front controller robusto para VisitaSegura
+
+// Muestra todos los errores en desarrollo
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
-// Helper: escribir errores en el log de Apache también
+// Helper para escribir errores en el log de Apache
 function log_error($msg) {
     error_log("[VisitaSegura] " . $msg);
 }
 
 // 1) Cargar DB y rutas (si existen)
-$dbFile = __DIR__ . '/../src/Config/database.php';
-$routesFile = __DIR__ . '/../src/Config/routes.php';
+$dbFile = __DIR__ . '/../src/Config/database.php'; // Ruta al archivo de conexión a la base de datos
+$routesFile = __DIR__ . '/../src/Config/routes.php'; // Ruta al archivo de rutas
 
+// Verifica que exista el archivo de base de datos
 if (!file_exists($dbFile)) {
     header('HTTP/1.1 500 Internal Server Error');
     echo "<h1>Error: falta database.php</h1><p>Ruta esperada: {$dbFile}</p>";
     log_error("Falta archivo: {$dbFile}");
     exit;
 }
+// Verifica que exista el archivo de rutas
 if (!file_exists($routesFile)) {
     header('HTTP/1.1 500 Internal Server Error');
     echo "<h1>Error: falta routes.php</h1><p>Ruta esperada: {$routesFile}</p>";
@@ -27,8 +31,11 @@ if (!file_exists($routesFile)) {
     exit;
 }
 
+// Carga la conexión PDO y las rutas
 $pdo = require $dbFile;
 $routes = require $routesFile;
+
+// Verifica que las rutas sean un array válido
 if (!is_array($routes)) {
     header('HTTP/1.1 500 Internal Server Error');
     echo "<h1>Error: routes.php no devolvió un array válido</h1>";
@@ -38,17 +45,17 @@ if (!is_array($routes)) {
 
 // 2) Autoloader mínimo por convención de nombres
 spl_autoload_register(function($class) {
-    // Esperamos namespace JAM\VisitaSegura\Controller\NameController
+    // Espera namespace JAM\VisitaSegura\Controller\NameController
     $prefix = 'JAM\\VisitaSegura\\';
     if (strpos($class, $prefix) === 0) {
-        $relative = substr($class, strlen($prefix)); // Controller\AuthController
+        $relative = substr($class, strlen($prefix)); // Obtiene Controller\AuthController
         $path = __DIR__ . '/../src/' . str_replace('\\', '/', $relative) . '.php';
         if (file_exists($path)) {
             require_once $path;
             return true;
         }
     }
-    // fallback: intentar bajo src/Controller/<ClassName>.php
+    // Fallback: intenta bajo src/Controller/<ClassName>.php
     $parts = explode('\\', $class);
     $short = end($parts);
     $alt = __DIR__ . '/../src/Controller/' . $short . '.php';
@@ -60,40 +67,40 @@ spl_autoload_register(function($class) {
 });
 
 // 3) Obtener método y URI
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$rawUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET'; // Método HTTP (GET, POST, etc)
+$rawUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/'; // URI solicitada
 
 // 4) Detectar basePath dinámico (soporta /visita-segura/public o /visita-segura)
-$scriptDir = str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'])); // e.g. /visita-segura/public
-$basePath = $scriptDir !== '/' ? rtrim($scriptDir, '/') : '';
+$scriptDir = str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'])); // Carpeta donde está index.php
+$basePath = $scriptDir !== '/' ? rtrim($scriptDir, '/') : ''; // Base path (ej: /visita-segura/public)
 $uri = $rawUri;
 if ($basePath !== '' && strpos($uri, $basePath) === 0) {
-    $uri = substr($uri, strlen($basePath));
+    $uri = substr($uri, strlen($basePath)); // Quita el basePath de la URI
 }
-$uri = '/' . ltrim($uri, '/');
-$uri = rtrim($uri, '/');
-if ($uri === '') $uri = '/';
+$uri = '/' . ltrim($uri, '/'); // Asegura que comience con /
+$uri = rtrim($uri, '/'); // Quita barra final
+if ($uri === '') $uri = '/'; // Si queda vacío, es la raíz
 
-// Guardar para vistas si hace falta
+// Guarda basePath para usar en las vistas
 $GLOBALS['basePath'] = $basePath;
 
 // 5) Dispatcher con validaciones y soporte para rutas con parámetros
 $dispatch = function(array $route, array $params = []) use ($pdo) {
-    [$class, $action] = $route;
+    [$class, $action] = $route; // Obtiene clase y método
     if (!class_exists($class)) {
         return [
             'code' => 500,
             'body' => "<h1>Error interno</h1><p>Clase no encontrada: " . htmlspecialchars($class) . "</p>"
         ];
     }
-    $controller = new $class($pdo);
+    $controller = new $class($pdo); // Instancia el controlador
     if (!method_exists($controller, $action)) {
         return [
             'code' => 404,
             'body' => "<h1>404</h1><p>Método no encontrado: " . htmlspecialchars($action) . "</p>"
         ];
     }
-    // Llamar y devolver string o response
+    // Llama al método y devuelve el resultado
     try {
         $result = call_user_func_array([$controller, $action], $params);
         return ['code' => 200, 'body' => $result];
@@ -103,7 +110,7 @@ $dispatch = function(array $route, array $params = []) use ($pdo) {
     }
 };
 
-// 6) 1) Intento match exacto (GET/POST)
+// 6) Intento de match exacto (GET/POST)
 if (isset($routes[$method]) && isset($routes[$method][$uri])) {
     $response = $dispatch($routes[$method][$uri], []);
     http_response_code($response['code']);
@@ -111,15 +118,16 @@ if (isset($routes[$method]) && isset($routes[$method][$uri])) {
     exit;
 }
 
-// 7) 2) Intento match con parámetros (revisamos GET_PARAM y POST_PARAM si existen)
+// 7) Intento de match con parámetros (GET_PARAM y POST_PARAM)
 $paramCollections = [];
 if (isset($routes['GET_PARAM'])) $paramCollections['GET'] = $routes['GET_PARAM'];
 if (isset($routes['POST_PARAM'])) $paramCollections['POST'] = $routes['POST_PARAM'];
 if ($method === 'GET' && isset($routes['GET_PARAM'])) {
     foreach ($routes['GET_PARAM'] as $path => $route) {
+        // Convierte /visits/{id} en regexp /visits/([\w-]+)
         $pattern = '#^' . preg_replace('#\{\w+\}#', '([\w-]+)', rtrim($path, '/')) . '$#';
         if (preg_match($pattern, $uri, $matches)) {
-            array_shift($matches);
+            array_shift($matches); // Elimina el match completo
             $response = $dispatch($route, $matches);
             http_response_code($response['code']);
             echo $response['body'];
@@ -128,7 +136,7 @@ if ($method === 'GET' && isset($routes['GET_PARAM'])) {
     }
 }
 
-// 8) Si nada coincide, mostrar información útil para depurar
+// 8) Si nada coincide, muestra información útil para depurar
 http_response_code(404);
 echo "<h1>404 - Página no encontrada</h1>";
 echo "<p>URI solicitada (raw): " . htmlspecialchars($rawUri) . "</p>";

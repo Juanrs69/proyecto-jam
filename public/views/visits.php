@@ -33,7 +33,7 @@
                         <td><?= htmlspecialchars($visita['fecha']) ?></td>
                         <td><?= htmlspecialchars($visita['motivo']) ?></td>
                         <td>
-                            <a href="<?= $GLOBALS['basePath'] ?>/visits/<?= urlencode($visita['id']) ?>" class="btn btn-sm btn-outline-primary">Ver</a>
+                            <a href="<?= $GLOBALS['basePath'] ?>/visitantes/<?= urlencode($visita['visitante_id']) ?>" class="btn btn-sm btn-outline-info">Ver visitante</a>
                             <a href="<?= $GLOBALS['basePath'] ?>/visits/<?= urlencode($visita['id']) ?>/edit" class="btn btn-sm btn-outline-warning">Editar</a>
                             <form action="<?= $GLOBALS['basePath'] ?>/visits/<?= urlencode($visita['id']) ?>/delete" method="post" style="display:inline" onsubmit="return confirm('¿Seguro que deseas eliminar esta visita?');">
                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
@@ -50,4 +50,5 @@
     </div>
 </div>
 </body>
+</html>
 </html>

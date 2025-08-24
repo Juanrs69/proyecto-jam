@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-100 min-vh-100 d-flex align-items-center justify-content-center">
   <div class="card shadow p-4 w-100" style="max-width: 500px;">
-    <h2 class="mb-4 text-center text-primary">Crear nueva visita</h2>
+    <h2 class="mb-4 text-center text-primary">Crearnueva visita</h2>
     <?php if (isset($error)): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
@@ -24,15 +24,25 @@
             <input type="datetime-local" name="fecha" class="form-control" required>
         </div>
         <div class="mb-3">
-            <label class="form-label">Visitante</label>
-            <select name="visitante" class="form-select" required>
-                <option value="">Seleccione un visitante</option>
+            <label class="form-label">Visitante existente</label>
+            <select name="visitante" class="form-select">
+                <option value="">-- Seleccione un visitante existente --</option>
                 <?php foreach ($visitantes as $v): ?>
                     <option value="<?= htmlspecialchars($v['id']) ?>">
                         <?= htmlspecialchars($v['nombre']) ?> (ID: <?= htmlspecialchars($v['id']) ?>)
                     </option>
                 <?php endforeach; ?>
             </select>
+            <div class="form-text">O registre un nuevo visitante abajo</div>
+        </div>
+        <div class="mb-3 border rounded p-2 bg-light">
+            <div class="mb-2 fw-bold text-secondary">Nuevo visitante (opcional)</div>
+            <label class="form-label">Nombre</label>
+            <input type="text" name="nuevo_nombre" class="form-control mb-2" placeholder="Nombre completo">
+            <label class="form-label">Documento</label>
+            <input type="text" name="nuevo_documento" class="form-control mb-2" placeholder="Documento">
+            <label class="form-label">Empresa</label>
+            <input type="text" name="nuevo_empresa" class="form-control" placeholder="Empresa">
         </div>
         <button type="submit" class="btn btn-primary w-100">Guardar</button>
     </form>
