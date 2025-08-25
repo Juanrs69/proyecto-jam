@@ -120,10 +120,11 @@ if (isset($routes[$method]) && isset($routes[$method][$uri])) {
 
 // 7) Intento de match con parámetros (GET_PARAM y POST_PARAM)
 $paramCollections = [];
-if (isset($routes['GET_PARAM'])) $paramCollections['GET'] = $routes['GET_PARAM'];
+if (isset($routes['GET_PARAM']))  $paramCollections['GET']  = $routes['GET_PARAM'];
 if (isset($routes['POST_PARAM'])) $paramCollections['POST'] = $routes['POST_PARAM'];
-if ($method === 'GET' && isset($routes['GET_PARAM'])) {
-    foreach ($routes['GET_PARAM'] as $path => $route) {
+
+if (isset($paramCollections[$method])) {
+    foreach ($paramCollections[$method] as $path => $route) {
         // Convierte /visits/{id} en regexp /visits/([\w-]+)
         $pattern = '#^' . preg_replace('#\{\w+\}#', '([\w-]+)', rtrim($path, '/')) . '$#';
         if (preg_match($pattern, $uri, $matches)) {

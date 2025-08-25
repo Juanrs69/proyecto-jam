@@ -21,6 +21,7 @@ return [
         '/register'      => [AuthController::class, 'register'],
         '/visits'        => [VisitController::class, 'store'],
         '/visitantes'    => [VisitorController::class, 'store'],
+        '/panel'         => [AuthController::class, 'panel'], // <- necesario para manejar POST del panel
     ],
     // Rutas con parámetros
     'GET_PARAM' => [

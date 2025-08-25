@@ -34,5 +34,8 @@
       <a href="<?= htmlspecialchars(($bp === '')? '/register' : $bp . '/register') ?>" class="text-decoration-none text-secondary">¿No tienes cuenta? Regístrate</a>
     </p>
   </div>
+  <footer class="text-center text-muted small py-3 mt-4 position-absolute bottom-0 w-100">
+    &copy; <?= date('Y') ?> VisitaSegura. Todos los derechos reservados.
+  </footer>
 </body>
 </html>

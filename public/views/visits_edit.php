@@ -5,6 +5,7 @@
     <title>Editar visita</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-vh-100 d-flex align-items-center justify-content-center">
@@ -25,6 +26,10 @@
             <input type="datetime-local" name="fecha" class="form-control" value="<?= date('Y-m-d\TH:i', strtotime($visita['fecha'])) ?>" required>
         </div>
         <div class="mb-3">
+            <label class="form-label">Departamento</label>
+            <input type="text" name="departamento" class="form-control" value="<?= htmlspecialchars($visita['departamento'] ?? '') ?>" required>
+        </div>
+        <div class="mb-3">
             <label class="form-label">Visitante</label>
             <select name="visitante" class="form-select" required>
                 <option value="">Seleccione un visitante</option>
@@ -35,7 +40,7 @@
                 <?php endforeach; ?>
             </select>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Guardar cambios</button>
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-1"></i>Guardar cambios</button>
     </form>
     <?php else: ?>
         <div class="alert alert-warning">Visita no encontrada.</div>
@@ -44,5 +49,8 @@
         <a href="<?= $GLOBALS['basePath'] ?>/visits" class="text-decoration-none text-secondary">Volver al listado</a>
     </p>
   </div>
+  <footer class="text-center text-muted small py-3 mt-4 w-100 position-absolute bottom-0">
+    &copy; <?= date('Y') ?> VisitaSegura. Todos los derechos reservados.
+  </footer>
 </body>
 </html>

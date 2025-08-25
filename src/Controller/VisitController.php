@@ -13,21 +13,70 @@ class VisitController
         $this->pdo = $pdo;
     }
 
+    private function requireAdmin()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
+        }
+        if (($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+            http_response_code(403);
+            echo 'Acceso restringido: se requiere rol administrador.';
+            exit;
+        }
+    }
+
     // Muestra el listado de visitas
     public function index()
     {
         session_start();
-        // Si no hay usuario autenticado, redirige al login
         if (!isset($_SESSION['user'])) {
-            header('Location: ' . $GLOBALS['basePath'] . '/login');
-            exit;
+            header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
         }
+        // Restringir a administradores
+        $this->requireAdmin();
 
-        // Consulta todas las visitas ordenadas por fecha descendente
-        $stmt = $this->pdo->query("SELECT * FROM visitas ORDER BY fecha DESC");
+        // Filtros
+        $fd  = trim($_GET['desde'] ?? ''); // formato esperado: YYYY-MM-DD
+        $fh  = trim($_GET['hasta'] ?? ''); // formato esperado: YYYY-MM-DD
+        $dep = trim($_GET['dep']   ?? '');
+
+        $where  = [];
+        $params = [];
+        if ($fd !== '') { $where[] = 'fecha >= ?'; $params[] = $fd . ' 00:00:00'; }
+        if ($fh !== '') { $where[] = 'fecha <= ?'; $params[] = $fh . ' 23:59:59'; }
+        if ($dep !== '') { $where[] = 'departamento LIKE ?'; $params[] = '%' . $dep . '%'; }
+
+        $whereSql = $where ? (' WHERE ' . implode(' AND ', $where)) : '';
+
+        // Paginación
+        $perPage = 10;
+        $page = max(1, (int)($_GET['p'] ?? 1));
+        $offset = ($page - 1) * $perPage;
+
+        // Total
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM visitas{$whereSql}");
+        $stmt->execute($params);
+        $total = (int)$stmt->fetchColumn();
+
+        // Datos
+        $sql = "SELECT * FROM visitas{$whereSql} ORDER BY fecha DESC LIMIT ? OFFSET ?";
+        $stmt = $this->pdo->prepare($sql);
+        $bind = $params;
+        $bind[] = $perPage;
+        $bind[] = $offset;
+        // Vincular para forzar enteros en LIMIT/OFFSET
+        foreach ($bind as $i => $val) {
+            $type = PDO::PARAM_STR;
+            if ($i >= count($params)) $type = PDO::PARAM_INT;
+            $stmt->bindValue($i + 1, $val, $type);
+        }
+        $stmt->execute();
         $visitas = $stmt->fetchAll();
 
-        // Incluye la vista de listado de visitas
+        // Variables para la vista
+        $filters = ['desde' => $fd, 'hasta' => $fh, 'dep' => $dep];
+
         ob_start();
         include __DIR__ . '/../../public/views/visits.php';
         return ob_get_clean();
@@ -41,6 +90,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $this->requireAdmin();
         // Obtiene todos los visitantes para el select del formulario
         $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
         $visitantes = $stmt->fetchAll();
@@ -59,6 +109,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $this->requireAdmin();
         // Validación CSRF
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
@@ -77,8 +128,9 @@ class VisitController
         $nuevo_nombre = trim($_POST['nuevo_nombre'] ?? '');
         $nuevo_documento = trim($_POST['nuevo_documento'] ?? '');
         $nuevo_empresa = trim($_POST['nuevo_empresa'] ?? '');
+        $departamento = trim($_POST['departamento'] ?? ''); // nuevo
 
-        // Validación simple de campos obligatorios
+        // Validación simple de campos obligatorios (departamento opcional para compatibilidad)
         if (!$motivo || !$fecha || (!$visitante && !$nuevo_nombre)) {
             $error = "Todos los campos son obligatorios (elige o crea un visitante)";
             $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
@@ -95,9 +147,9 @@ class VisitController
             $visitante = $this->pdo->lastInsertId();
         }
 
-        // Inserta la visita en la base de datos
-        $stmt = $this->pdo->prepare("INSERT INTO visitas (visitante_id, fecha, motivo) VALUES (?, ?, ?)");
-        $stmt->execute([$visitante, $fecha, $motivo]);
+        // Inserta la visita (incluye departamento si existe)
+        $stmt = $this->pdo->prepare("INSERT INTO visitas (visitante_id, fecha, motivo, departamento) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$visitante, $fecha, $motivo, $departamento !== '' ? $departamento : null]);
 
         // Redirigir al listado de visitas después de crear
         header('Location: ' . $GLOBALS['basePath'] . '/visits');
@@ -112,6 +164,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $this->requireAdmin();
 
         // Busca la visita por su ID
         $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
@@ -132,6 +185,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $this->requireAdmin();
         // Busca la visita a editar
         $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
         $stmt->execute([$id]);
@@ -155,6 +209,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $this->requireAdmin();
         // Validación CSRF
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
@@ -171,8 +226,9 @@ class VisitController
         $motivo = $_POST['motivo'] ?? '';
         $fecha = $_POST['fecha'] ?? '';
         $visitante = $_POST['visitante'] ?? '';
+        $departamento = trim($_POST['departamento'] ?? ''); // nuevo
 
-        // Validación de campos obligatorios
+        // Validación de campos obligatorios (departamento opcional para compatibilidad)
         if (!$motivo || !$fecha || !$visitante) {
             $error = "Todos los campos son obligatorios";
             $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
@@ -183,9 +239,9 @@ class VisitController
             return ob_get_clean();
         }
 
-        // Actualiza la visita en la base de datos
-        $stmt = $this->pdo->prepare("UPDATE visitas SET visitante_id = ?, fecha = ?, motivo = ? WHERE id = ?");
-        $stmt->execute([$visitante, $fecha, $motivo, $id]);
+        // Actualiza incluyendo departamento
+        $stmt = $this->pdo->prepare("UPDATE visitas SET visitante_id = ?, fecha = ?, motivo = ?, departamento = ? WHERE id = ?");
+        $stmt->execute([$visitante, $fecha, $motivo, $departamento !== '' ? $departamento : null, $id]);
 
         // Redirigir al listado de visitas después de editar
         header('Location: ' . $GLOBALS['basePath'] . '/visits');
@@ -200,6 +256,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        $this->requireAdmin();
         // Validación CSRF
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {

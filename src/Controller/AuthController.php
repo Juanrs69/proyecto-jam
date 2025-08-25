@@ -92,9 +92,9 @@ class AuthController
                     'correo' => $user['correo']
                 ];
 
-                // Redirigir a /visits (o panel) respetando basePath
+                // Redirigir a /panel respetando basePath
                 $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
-                $location = ($bp === '') ? '/visits' : $bp . '/visits';
+                $location = ($bp === '') ? '/panel' : $bp . '/panel';
                 header('Location: ' . $location);
                 exit;
             }
@@ -153,7 +153,10 @@ class AuthController
             header('Location: ' . $location);
             exit;
         }
-        return "<h2>Bienvenido al panel privado, " . htmlspecialchars($_SESSION['user']['nombre']) . "</h2>";
+        // Mostrar el panel real con menú y secciones
+        ob_start();
+        include __DIR__ . '/../../public/views/panel.php';
+        return ob_get_clean();
     }
 
     /**

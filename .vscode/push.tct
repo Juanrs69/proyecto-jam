@@ -1,3 +1,12 @@
 git add .
-git commit -m "avances "
+git commit -m "CRUD de usuarios/visitantes/visitas, “departamento” en visitas, seguridad (CSRF/roles), enrutamiento POST, UI con íconos, paginación/filtros, vista “Ver visitas” en modal e infraestructura lista."
 git push
+
+panel.php: Es el panel principal y menú de navegación.
+visits.php, visits_create.php, visits_edit.php: Son las vistas para el CRUD de visitas, accesibles desde el panel o directamente por URL.
+visitantes.php, visitantes_create.php, visitantes_edit.php, visitantes_show.php: Son las vistas para el CRUD de visitantes, también accesibles desde el panel o por URL.
+login.php, register.php: Son las vistas de autenticación, necesarias para acceder al sistema.
+index.php: Es el front controller que enruta todas las peticiones.
+routes.php: Define todas las rutas y acciones del sistema.
+AuthController.php, VisitController.php, VisitorController.php: Son los controladores que gestionan la lógica de cada módulo.
+.htaccess: Es necesario para que Apache redirija todas las rutas a index.php.

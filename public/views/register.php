@@ -40,5 +40,8 @@
       <a href="<?= htmlspecialchars(($bp === '')? '/login' : $bp . '/login') ?>" class="text-decoration-none text-secondary">¿Ya tienes cuenta? Inicia sesión</a>
     </p>
   </div>
+  <footer class="text-center text-muted small py-3 mt-4 position-absolute bottom-0 w-100">
+    &copy; <?= date('Y') ?> VisitaSegura. Todos los derechos reservados.
+  </footer>
 </body>
 </html>
