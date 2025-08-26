@@ -11,7 +11,8 @@ class VisitController
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
-        $this->ensureVisitasColumns();
+    $this->ensureVisitasColumns();
+    $this->ensureNotificationsTable();
     }
 
     private function requireAdmin()
@@ -53,9 +54,10 @@ class VisitController
         // Filtros
         $fd  = trim($_GET['desde'] ?? ''); // formato esperado: YYYY-MM-DD
         $fh  = trim($_GET['hasta'] ?? ''); // formato esperado: YYYY-MM-DD
-        $dep = trim($_GET['dep']   ?? '');
+    $dep = trim($_GET['dep']   ?? '');
         $doc = trim($_GET['doc']   ?? '');
-        $est = trim($_GET['estado']?? '');
+    $est = trim($_GET['estado']?? '');
+    $emp = trim($_GET['emp']   ?? ''); // búsqueda por empleado anfitrión (nombre o id)
 
         $where  = [];
         $params = [];
@@ -64,6 +66,12 @@ class VisitController
         if ($dep !== '') { $where[] = 'v.departamento LIKE ?'; $params[] = '%' . $dep . '%'; }
         if ($doc !== '') { $where[] = 'vi.documento LIKE ?'; $params[] = '%' . $doc . '%'; }
         if ($est !== '') { $where[] = 'v.estado = ?'; $params[] = $est; }
+        if ($emp !== '') {
+            // permitir buscar por nombre de empleado (LIKE) o por id exacto
+            $where[] = '(u.nombre LIKE ? OR u.id = ?)';
+            $params[] = '%' . $emp . '%';
+            $params[] = $emp;
+        }
 
         $whereSql = $where ? (' WHERE ' . implode(' AND ', $where)) : '';
 
@@ -73,13 +81,17 @@ class VisitController
         $offset = ($page - 1) * $perPage;
 
         // Total (con join para filtro por doc)
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM visitas v LEFT JOIN visitantes vi ON vi.id = v.visitante_id{$whereSql}");
+    $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM visitas v 
+                      LEFT JOIN visitantes vi ON vi.id = v.visitante_id
+                      LEFT JOIN usuarios u ON u.id = v.anfitrion_id
+                      {$whereSql}");
         $stmt->execute($params);
         $total = (int)$stmt->fetchColumn();
 
         // Datos
-        $sql = "SELECT v.* FROM visitas v
-                LEFT JOIN visitantes vi ON vi.id = v.visitante_id
+    $sql = "SELECT v.*, u.nombre AS empleado_nombre FROM visitas v
+        LEFT JOIN visitantes vi ON vi.id = v.visitante_id
+        LEFT JOIN usuarios u ON u.id = v.anfitrion_id
                 {$whereSql}
                 ORDER BY v.fecha DESC
                 LIMIT ? OFFSET ?";
@@ -95,7 +107,7 @@ class VisitController
         $visitas = $stmt->fetchAll();
 
         // Variables para la vista
-        $filters = ['desde' => $fd, 'hasta' => $fh, 'dep' => $dep, 'doc' => $doc, 'estado' => $est];
+    $filters = ['desde' => $fd, 'hasta' => $fh, 'dep' => $dep, 'doc' => $doc, 'estado' => $est, 'emp' => $emp];
 
         ob_start();
         include __DIR__ . '/../../public/views/visits.php';
@@ -112,8 +124,10 @@ class VisitController
         }
     $this->requireRoles(['administrador','empleado','recepcionista']);
         // Obtiene todos los visitantes para el select del formulario
-        $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
-        $visitantes = $stmt->fetchAll();
+    $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
+    $visitantes = $stmt->fetchAll();
+    // empleados para asignar como anfitrión (admin/recepcionista)
+    $empleados = $this->pdo->query("SELECT id, nombre FROM usuarios WHERE rol='empleado' ORDER BY nombre")->fetchAll();
 
         // Incluye la vista del formulario de creación
         ob_start();
@@ -148,7 +162,8 @@ class VisitController
         $nuevo_nombre = trim($_POST['nuevo_nombre'] ?? '');
         $nuevo_documento = trim($_POST['nuevo_documento'] ?? '');
         $nuevo_empresa = trim($_POST['nuevo_empresa'] ?? '');
-        $departamento = trim($_POST['departamento'] ?? ''); // nuevo
+    $departamento = trim($_POST['departamento'] ?? ''); // nuevo
+    $anfitrion_id = trim($_POST['anfitrion_id'] ?? ''); // nuevo
 
         // Validación simple de campos obligatorios (departamento opcional para compatibilidad)
         if (!$motivo || !$fecha || (!$visitante && !$nuevo_nombre)) {
@@ -167,9 +182,22 @@ class VisitController
             $visitante = $this->pdo->lastInsertId();
         }
 
-        // Inserta la visita (incluye departamento si existe)
-        $stmt = $this->pdo->prepare("INSERT INTO visitas (visitante_id, fecha, motivo, departamento) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$visitante, $fecha, $motivo, $departamento !== '' ? $departamento : null]);
+        // Resolver anfitrión: si rol empleado y no viene, usar el actual
+        $rol = $_SESSION['user']['rol'] ?? '';
+        if ($rol === 'empleado' && $anfitrion_id === '') {
+            $anfitrion_id = $_SESSION['user']['id'] ?? '';
+        }
+        if ($anfitrion_id === '') { $anfitrion_id = null; }
+
+        // Inserta la visita (incluye departamento y anfitrión si existen)
+        $stmt = $this->pdo->prepare("INSERT INTO visitas (visitante_id, fecha, motivo, departamento, anfitrion_id) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$visitante, $fecha, $motivo, $departamento !== '' ? $departamento : null, $anfitrion_id]);
+        $visitaId = $this->pdo->lastInsertId();
+
+        // Notificar al anfitrión (si aplica)
+        if (!empty($anfitrion_id)) {
+            $this->notifyUser($anfitrion_id, 'Nuevo visitante', 'Se ha registrado una visita que te tiene como anfitrión. ID visita: ' . $visitaId);
+        }
 
     // Redirigir al listado de visitas después de crear
     $_SESSION['flashes'][] = ['type' => 'success', 'msg' => 'Visita creada correctamente.'];
@@ -191,7 +219,7 @@ class VisitController
         // $this->requireAdmin(); // NO requerido para ver detalle
 
         // Busca la visita por su ID
-        $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
+    $stmt = $this->pdo->prepare("SELECT v.*, u.nombre AS empleado_nombre FROM visitas v LEFT JOIN usuarios u ON u.id=v.anfitrion_id WHERE v.id = ?");
         $stmt->execute([$id]);
         $visita = $stmt->fetch();
 
@@ -211,13 +239,15 @@ class VisitController
             exit;
         }
         // Busca la visita a editar
-        $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
+    $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
         $stmt->execute([$id]);
         $visita = $stmt->fetch();
 
         // Obtiene todos los visitantes para el select
-        $stmt2 = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
-        $visitantes = $stmt2->fetchAll();
+    $stmt2 = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
+    $visitantes = $stmt2->fetchAll();
+    // Empleados (solo para admin)
+    $empleados = $this->pdo->query("SELECT id, nombre FROM usuarios WHERE rol='empleado' ORDER BY nombre")->fetchAll();
 
         // Incluye la vista de edición
         ob_start();
@@ -250,8 +280,9 @@ class VisitController
         $motivo = $_POST['motivo'] ?? '';
         $fecha = $_POST['fecha'] ?? '';
         $visitante = $_POST['visitante'] ?? '';
-        $departamento = trim($_POST['departamento'] ?? ''); // nuevo
-        $salida = trim($_POST['salida'] ?? ''); // nuevo
+    $departamento = trim($_POST['departamento'] ?? ''); // nuevo
+    $salida = trim($_POST['salida'] ?? ''); // nuevo
+    $anfitrion_id = trim($_POST['anfitrion_id'] ?? ''); // nuevo
 
         // Validación de campos obligatorios (departamento opcional para compatibilidad)
         if (!$motivo || !$fecha || !$visitante) {
@@ -265,16 +296,17 @@ class VisitController
         }
 
         // Actualiza incluyendo departamento
-        $stmt = $this->pdo->prepare("UPDATE visitas
-                                     SET visitante_id = ?, fecha = ?, motivo = ?, departamento = ?, salida = ?
-                                     WHERE id = ?");
+    $stmt = $this->pdo->prepare("UPDATE visitas
+                     SET visitante_id = ?, fecha = ?, motivo = ?, departamento = ?, salida = ?, anfitrion_id = ?
+                     WHERE id = ?");
         $stmt->execute([
             $visitante,
             $fecha,
             $motivo,
             $departamento !== '' ? $departamento : null,
-            $salida !== '' ? $salida : null,
-            $id
+        $salida !== '' ? $salida : null,
+        $anfitrion_id !== '' ? $anfitrion_id : null,
+        $id
         ]);
 
     // Redirigir al listado de visitas después de editar
@@ -472,9 +504,10 @@ class VisitController
         // Reutiliza mismos filtros que index()
         $fd  = trim($_GET['desde'] ?? '');
         $fh  = trim($_GET['hasta'] ?? '');
-        $dep = trim($_GET['dep']   ?? '');
+    $dep = trim($_GET['dep']   ?? '');
         $doc = trim($_GET['doc']   ?? '');
-        $est = trim($_GET['estado']?? '');
+    $est = trim($_GET['estado']?? '');
+    $emp = trim($_GET['emp']   ?? '');
 
         $where  = [];
         $params = [];
@@ -482,12 +515,14 @@ class VisitController
         if ($fh !== '') { $where[] = 'v.fecha <= ?'; $params[] = $fh . ' 23:59:59'; }
         if ($dep !== '') { $where[] = 'v.departamento LIKE ?'; $params[] = '%' . $dep . '%'; }
         if ($doc !== '') { $where[] = 'vi.documento LIKE ?'; $params[] = '%' . $doc . '%'; }
-        if ($est !== '') { $where[] = 'v.estado = ?'; $params[] = $est; }
+    if ($est !== '') { $where[] = 'v.estado = ?'; $params[] = $est; }
+    if ($emp !== '') { $where[] = '(u.nombre LIKE ? OR u.id = ?)'; $params[] = '%' . $emp . '%'; $params[] = $emp; }
         $whereSql = $where ? (' WHERE ' . implode(' AND ', $where)) : '';
 
-        $sql = "SELECT v.id, vi.documento, v.departamento, v.fecha, v.salida, v.motivo, v.estado
-                FROM visitas v
-                LEFT JOIN visitantes vi ON vi.id = v.visitante_id
+    $sql = "SELECT v.id, vi.documento, v.departamento, v.fecha, v.salida, v.motivo, v.estado, u.nombre AS empleado
+        FROM visitas v
+        LEFT JOIN visitantes vi ON vi.id = v.visitante_id
+        LEFT JOIN usuarios u ON u.id = v.anfitrion_id
                 {$whereSql}
                 ORDER BY v.fecha DESC";
         $stmt = $this->pdo->prepare($sql);
@@ -498,9 +533,9 @@ class VisitController
         header('Content-Disposition: attachment; filename="visitas.csv"');
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID','Documento','Departamento','Fecha entrada','Fecha salida','Motivo','Estado']);
+        fputcsv($out, ['ID','Documento','Departamento','Fecha entrada','Fecha salida','Motivo','Estado','Empleado']);
         foreach ($rows as $r) {
-            fputcsv($out, [$r['id'],$r['documento'],$r['departamento'],$r['fecha'],$r['salida'],$r['motivo'],$r['estado']]);
+            fputcsv($out, [$r['id'],$r['documento'],$r['departamento'],$r['fecha'],$r['salida'],$r['motivo'],$r['estado'],$r['empleado']]);
         }
         fclose($out);
         exit;
@@ -537,5 +572,29 @@ class VisitController
         try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN salida DATETIME NULL AFTER fecha"); } catch (\Throwable $e) {}
         try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN estado ENUM('pendiente','autorizada','rechazada') NOT NULL DEFAULT 'pendiente' AFTER departamento"); } catch (\Throwable $e) {}
         try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN autorizado_por VARCHAR(64) NULL AFTER estado"); } catch (\Throwable $e) {}
+        try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN anfitrion_id VARCHAR(64) NULL AFTER visitante_id"); } catch (\Throwable $e) {}
+    }
+
+    private function ensureNotificationsTable(): void
+    {
+        try {
+            $this->pdo->exec("CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(64) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                body TEXT,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                read_at DATETIME NULL,
+                INDEX idx_user_read (user_id, read_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        } catch (\Throwable $e) {}
+    }
+
+    private function notifyUser(string $userId, string $title, string $body): void
+    {
+        try {
+            $st = $this->pdo->prepare("INSERT INTO notifications (user_id, title, body) VALUES (?, ?, ?)");
+            $st->execute([$userId, $title, $body]);
+        } catch (\Throwable $e) {}
     }
 }

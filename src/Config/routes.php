@@ -3,6 +3,7 @@
 use JAM\VisitaSegura\Controller\AuthController;
 use JAM\VisitaSegura\Controller\VisitController;
 use JAM\VisitaSegura\Controller\VisitorController;
+use JAM\VisitaSegura\Controller\NotificationController;
 
 return [
     'GET' => [
@@ -18,6 +19,7 @@ return [
         '/visitantes'    => [VisitorController::class, 'index'],
         '/visitantes/create' => [VisitorController::class, 'showCreateForm'],
         '/visitantes/{id}/edit' => [VisitorController::class, 'showEditForm'],
+    '/notificaciones' => [NotificationController::class, 'index'],
     ],
     'POST' => [
         '/login'         => [AuthController::class, 'login'],
@@ -25,6 +27,7 @@ return [
         '/visits'        => [VisitController::class, 'store'],
         '/visitantes'    => [VisitorController::class, 'store'],
         '/panel'         => [AuthController::class, 'panel'], // <- necesario para manejar POST del panel
+    '/notificaciones/leer-todas' => [NotificationController::class, 'markAllRead'],
     ],
     // Rutas con parámetros
     'GET_PARAM' => [
@@ -41,6 +44,7 @@ return [
         '/visits/{id}/exit'       => [VisitController::class, 'markExit'],
         '/visitantes/{id}/edit'  => [VisitorController::class, 'update'],
         '/visitantes/{id}/delete'=> [VisitorController::class, 'delete'],
+    '/notificaciones/{id}/leer' => [NotificationController::class, 'markRead'],
     ],
 ];
 

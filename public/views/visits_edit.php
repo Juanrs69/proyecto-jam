@@ -41,6 +41,17 @@
             </select>
         </div>
         <div class="mb-3">
+            <label class="form-label">Empleado anfitrión</label>
+            <select name="anfitrion_id" class="form-select">
+                <option value="">-- Sin asignar --</option>
+                <?php foreach (($empleados ?? []) as $e): ?>
+                    <option value="<?= htmlspecialchars($e['id']) ?>" <?= ($visita['anfitrion_id'] ?? '') == $e['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($e['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
             <label class="form-label">Salida (opcional)</label>
             <input type="datetime-local" name="salida" class="form-control" value="<?= !empty($visita['salida']) ? date('Y-m-d\TH:i', strtotime($visita['salida'])) : '' ?>">
         </div>

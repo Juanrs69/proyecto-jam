@@ -34,11 +34,34 @@ if ($homeHref === null) {
     </ol>
   </nav>
   <h2 class="ms-3 mb-0"><?= htmlspecialchars($pageTitle) ?></h2>
-  <?php if ($showSearch): ?>
+  <div class="ms-auto d-flex align-items-center gap-3">
+  <?php
+      // Notificaciones: mostrar campana con contador
+      try {
+    $pdoH = require __DIR__ . '/../../../../src/Config/database.php';
+        if (session_status() !== PHP_SESSION_ACTIVE) @session_start();
+        $uid = $_SESSION['user']['id'] ?? null;
+        $bp = $GLOBALS['basePath'] ?? '';
+        $count = 0;
+        if ($uid) {
+          $stH = $pdoH->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND read_at IS NULL");
+          $stH->execute([$uid]);
+          $count = (int)$stH->fetchColumn();
+        }
+      } catch (\Throwable $e) { $count = 0; $bp = $GLOBALS['basePath'] ?? ''; }
+    ?>
+    <a href="<?= htmlspecialchars($bp) ?>/notificaciones" class="position-relative btn btn-light">
+      <i class="bi bi-bell"></i>
+      <?php if ($count > 0): ?>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= (int)$count ?></span>
+      <?php endif; ?>
+    </a>
+    <?php if ($showSearch): ?>
     <div class="ms-auto">
       <input type="text" class="form-control" id="tableSearch" placeholder="Buscar...">
     </div>
-  <?php endif; ?>
+    <?php endif; ?>
+  </div>
 </div>
 <script>
 (function(){

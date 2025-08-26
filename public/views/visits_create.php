@@ -39,6 +39,26 @@
             </select>
             <div class="form-text">O registre un nuevo visitante abajo</div>
         </div>
+                <?php
+                    if (session_status() !== PHP_SESSION_ACTIVE) @session_start();
+                    $rolActual = $_SESSION['user']['rol'] ?? '';
+                ?>
+                <?php if ($rolActual !== 'empleado'): ?>
+                <div class="mb-3">
+                        <label class="form-label">Empleado anfitrión</label>
+                        <select name="anfitrion_id" class="form-select">
+                                <option value="">-- Sin asignar --</option>
+                                <?php foreach (($empleados ?? []) as $e): ?>
+                                        <option value="<?= htmlspecialchars($e['id']) ?>"><?= htmlspecialchars($e['nombre']) ?></option>
+                                <?php endforeach; ?>
+                        </select>
+                </div>
+                <?php else: ?>
+                    <div class="mb-3">
+                        <label class="form-label">Empleado anfitrión</label>
+                        <input type="text" class="form-control" value="Asignado a mí" disabled>
+                    </div>
+                <?php endif; ?>
         <div class="mb-3 border rounded p-2 bg-light">
             <div class="mb-2 fw-bold text-secondary">Nuevo visitante (opcional)</div>
             <label class="form-label">Nombre</label>

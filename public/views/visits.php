@@ -35,13 +35,14 @@
     <!-- Filtros -->
     <?php
       $f = $filters ?? ['desde'=>'','hasta'=>'','dep'=>'','doc'=>'','estado'=>''];
-      $qBase = function(array $extra = []) use ($f) {
+    $qBase = function(array $extra = []) use ($f) {
           return http_build_query(array_filter([
               'desde' => $f['desde'] ?? '',
               'hasta' => $f['hasta'] ?? '',
               'dep'   => $f['dep']   ?? '',
               'doc'   => $f['doc']   ?? '',
               'estado'=> $f['estado']?? '',
+          'emp'   => $f['emp']   ?? '',
           ] + $extra, fn($v) => $v !== '' && $v !== null));
       };
       // Reusar $rolActual ya calculado arriba
@@ -72,6 +73,10 @@
                 <?php endforeach; ?>
             </select>
         </div>
+        <div class="col-12 col-md-3">
+            <label class="form-label mb-0">Empleado</label>
+            <input type="text" name="emp" value="<?= htmlspecialchars($f['emp'] ?? '') ?>" class="form-control" placeholder="Nombre o ID de empleado">
+        </div>
         <div class="col-12 d-flex justify-content-end">
             <button type="submit" class="btn btn-primary me-2">Filtrar</button>
             <a class="btn btn-secondary" href="<?= $GLOBALS['basePath'] ?>/visits">Limpiar</a>
@@ -89,6 +94,7 @@
                 <th>Salida</th>
                 <th>Motivo</th>
                 <th>Estado</th>
+                <th>Empleado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -127,6 +133,7 @@
                               ($visita['estado'] === 'rechazada' ? '<span class="badge bg-danger">Rechazada</span>' : '-'))
                             ?>
                         </td>
+                        <td><?= htmlspecialchars($visita['empleado_nombre'] ?? '-') ?></td>
                         <td>
                             <div class="d-flex flex-wrap gap-1">
                                 <?php if ($rolActual === 'administrador'): ?>
