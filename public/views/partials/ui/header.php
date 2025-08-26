@@ -6,6 +6,11 @@
 // $showSearch (bool)
 if (!isset($pageTitle)) { $pageTitle = 'Panel'; }
 if (!isset($breadcrumbs) || !is_array($breadcrumbs)) { $breadcrumbs = []; }
+// Normalizar: permitir items como string (se convierten a ['label'=>...])
+$breadcrumbs = array_map(function($b){
+  if (is_array($b)) return $b;
+  return ['label' => (string)$b];
+}, $breadcrumbs);
 $showSearch = $showSearch ?? false;
 // Home (Inicio) href: permitir override por $homeHref o auto según rol
 $homeHref = $homeHref ?? null;
@@ -23,11 +28,12 @@ if ($homeHref === null) {
     <ol class="breadcrumb mb-0">
       <li class="breadcrumb-item"><a href="<?= htmlspecialchars($homeHref) ?>">Inicio</a></li>
       <?php foreach ($breadcrumbs as $i => $bc): $last = $i === array_key_last($breadcrumbs); ?>
+        <?php $bcLabel = is_array($bc) ? ($bc['label'] ?? '') : (string)$bc; $bcHref = is_array($bc) ? ($bc['href'] ?? null) : null; ?>
         <li class="breadcrumb-item <?= $last ? 'active' : '' ?>" <?= $last ? 'aria-current="page"' : '' ?>>
-          <?php if (!$last && !empty($bc['href'])): ?>
-            <a href="<?= htmlspecialchars($bc['href']) ?>"><?= htmlspecialchars($bc['label'] ?? '') ?></a>
+          <?php if (!$last && !empty($bcHref)): ?>
+            <a href="<?= htmlspecialchars($bcHref) ?>"><?= htmlspecialchars($bcLabel) ?></a>
           <?php else: ?>
-            <?= htmlspecialchars($bc['label'] ?? '') ?>
+            <?= htmlspecialchars($bcLabel) ?>
           <?php endif; ?>
         </li>
       <?php endforeach; ?>
