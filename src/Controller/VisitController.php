@@ -11,6 +11,7 @@ class VisitController
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
+        $this->ensureVisitasColumns();
     }
 
     private function requireAdmin()
@@ -26,6 +27,19 @@ class VisitController
         }
     }
 
+    private function requireRoles(array $roles)
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
+        }
+        $rol = $_SESSION['user']['rol'] ?? '';
+        if (!in_array($rol, $roles, true)) {
+            http_response_code(403);
+            echo 'Acceso restringido.'; exit;
+        }
+    }
+
     // Muestra el listado de visitas
     public function index()
     {
@@ -33,19 +47,23 @@ class VisitController
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
         }
-        // Restringir a administradores
-        $this->requireAdmin();
+        // Administradores y empleados pueden ver el listado
+        $this->requireRoles(['administrador','empleado','recepcionista']);
 
         // Filtros
         $fd  = trim($_GET['desde'] ?? ''); // formato esperado: YYYY-MM-DD
         $fh  = trim($_GET['hasta'] ?? ''); // formato esperado: YYYY-MM-DD
         $dep = trim($_GET['dep']   ?? '');
+        $doc = trim($_GET['doc']   ?? '');
+        $est = trim($_GET['estado']?? '');
 
         $where  = [];
         $params = [];
-        if ($fd !== '') { $where[] = 'fecha >= ?'; $params[] = $fd . ' 00:00:00'; }
-        if ($fh !== '') { $where[] = 'fecha <= ?'; $params[] = $fh . ' 23:59:59'; }
-        if ($dep !== '') { $where[] = 'departamento LIKE ?'; $params[] = '%' . $dep . '%'; }
+        if ($fd !== '') { $where[] = 'v.fecha >= ?'; $params[] = $fd . ' 00:00:00'; }
+        if ($fh !== '') { $where[] = 'v.fecha <= ?'; $params[] = $fh . ' 23:59:59'; }
+        if ($dep !== '') { $where[] = 'v.departamento LIKE ?'; $params[] = '%' . $dep . '%'; }
+        if ($doc !== '') { $where[] = 'vi.documento LIKE ?'; $params[] = '%' . $doc . '%'; }
+        if ($est !== '') { $where[] = 'v.estado = ?'; $params[] = $est; }
 
         $whereSql = $where ? (' WHERE ' . implode(' AND ', $where)) : '';
 
@@ -54,28 +72,30 @@ class VisitController
         $page = max(1, (int)($_GET['p'] ?? 1));
         $offset = ($page - 1) * $perPage;
 
-        // Total
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM visitas{$whereSql}");
+        // Total (con join para filtro por doc)
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM visitas v LEFT JOIN visitantes vi ON vi.id = v.visitante_id{$whereSql}");
         $stmt->execute($params);
         $total = (int)$stmt->fetchColumn();
 
         // Datos
-        $sql = "SELECT * FROM visitas{$whereSql} ORDER BY fecha DESC LIMIT ? OFFSET ?";
+        $sql = "SELECT v.* FROM visitas v
+                LEFT JOIN visitantes vi ON vi.id = v.visitante_id
+                {$whereSql}
+                ORDER BY v.fecha DESC
+                LIMIT ? OFFSET ?";
         $stmt = $this->pdo->prepare($sql);
         $bind = $params;
         $bind[] = $perPage;
         $bind[] = $offset;
-        // Vincular para forzar enteros en LIMIT/OFFSET
         foreach ($bind as $i => $val) {
-            $type = PDO::PARAM_STR;
-            if ($i >= count($params)) $type = PDO::PARAM_INT;
+            $type = ($i >= count($params)) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
             $stmt->bindValue($i + 1, $val, $type);
         }
         $stmt->execute();
         $visitas = $stmt->fetchAll();
 
         // Variables para la vista
-        $filters = ['desde' => $fd, 'hasta' => $fh, 'dep' => $dep];
+        $filters = ['desde' => $fd, 'hasta' => $fh, 'dep' => $dep, 'doc' => $doc, 'estado' => $est];
 
         ob_start();
         include __DIR__ . '/../../public/views/visits.php';
@@ -90,7 +110,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
-        $this->requireAdmin();
+    $this->requireRoles(['administrador','empleado','recepcionista']);
         // Obtiene todos los visitantes para el select del formulario
         $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
         $visitantes = $stmt->fetchAll();
@@ -109,7 +129,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
-        $this->requireAdmin();
+    $this->requireRoles(['administrador','empleado','recepcionista']);
         // Validación CSRF
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
@@ -151,20 +171,24 @@ class VisitController
         $stmt = $this->pdo->prepare("INSERT INTO visitas (visitante_id, fecha, motivo, departamento) VALUES (?, ?, ?, ?)");
         $stmt->execute([$visitante, $fecha, $motivo, $departamento !== '' ? $departamento : null]);
 
-        // Redirigir al listado de visitas después de crear
-        header('Location: ' . $GLOBALS['basePath'] . '/visits');
+    // Redirigir al listado de visitas después de crear
+    $_SESSION['flashes'][] = ['type' => 'success', 'msg' => 'Visita creada correctamente.'];
+    header('Location: ' . $GLOBALS['basePath'] . '/visits');
         exit;
     }
 
     // Muestra el detalle de una visita
     public function show($id)
     {
+        // Permitir a admin/empleado/recepcionista ver detalle
+        $this->requireRoles(['administrador','empleado','recepcionista']);
+
         session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
-        $this->requireAdmin();
+        // $this->requireAdmin(); // NO requerido para ver detalle
 
         // Busca la visita por su ID
         $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
@@ -177,15 +201,15 @@ class VisitController
         return ob_get_clean();
     }
 
-    // Muestra el formulario para editar una visita
+    // Muestra el formulario para editar una visita (solo admin)
     public function showEditForm($id)
     {
+        $this->requireAdmin();
         session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
-        $this->requireAdmin();
         // Busca la visita a editar
         $stmt = $this->pdo->prepare("SELECT * FROM visitas WHERE id = ?");
         $stmt->execute([$id]);
@@ -204,12 +228,12 @@ class VisitController
     // Procesa la actualización de una visita (POST)
     public function update($id)
     {
+        $this->requireAdmin();
         session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
-        $this->requireAdmin();
         // Validación CSRF
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
@@ -227,6 +251,7 @@ class VisitController
         $fecha = $_POST['fecha'] ?? '';
         $visitante = $_POST['visitante'] ?? '';
         $departamento = trim($_POST['departamento'] ?? ''); // nuevo
+        $salida = trim($_POST['salida'] ?? ''); // nuevo
 
         // Validación de campos obligatorios (departamento opcional para compatibilidad)
         if (!$motivo || !$fecha || !$visitante) {
@@ -240,11 +265,244 @@ class VisitController
         }
 
         // Actualiza incluyendo departamento
-        $stmt = $this->pdo->prepare("UPDATE visitas SET visitante_id = ?, fecha = ?, motivo = ?, departamento = ? WHERE id = ?");
-        $stmt->execute([$visitante, $fecha, $motivo, $departamento !== '' ? $departamento : null, $id]);
+        $stmt = $this->pdo->prepare("UPDATE visitas
+                                     SET visitante_id = ?, fecha = ?, motivo = ?, departamento = ?, salida = ?
+                                     WHERE id = ?");
+        $stmt->execute([
+            $visitante,
+            $fecha,
+            $motivo,
+            $departamento !== '' ? $departamento : null,
+            $salida !== '' ? $salida : null,
+            $id
+        ]);
 
-        // Redirigir al listado de visitas después de editar
-        header('Location: ' . $GLOBALS['basePath'] . '/visits');
+    // Redirigir al listado de visitas después de editar
+    $_SESSION['flashes'][] = ['type' => 'success', 'msg' => 'Visita actualizada correctamente.'];
+    header('Location: ' . $GLOBALS['basePath'] . '/visits');
+        exit;
+    }
+
+    // Página de confirmación: Autorizar/Rechazar
+    public function showAuthorizeForm($id)
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        $this->requireRoles(['administrador','empleado']);
+
+        $decision = $_GET['decision'] ?? 'autorizar';
+        if (!in_array($decision, ['autorizar','rechazar'], true)) {
+            $decision = 'autorizar';
+        }
+        // Cargar visita con datos del visitante
+        $stmt = $this->pdo->prepare("SELECT v.*, vi.documento, vi.nombre AS visitante_nombre FROM visitas v LEFT JOIN visitantes vi ON vi.id=v.visitante_id WHERE v.id = ?");
+        $stmt->execute([$id]);
+        $visita = $stmt->fetch();
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title><?= $decision==='autorizar' ? 'Autorizar visita' : 'Rechazar visita' ?></title>
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body class="bg-light">
+        <div class="container py-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-3"><?= $decision==='autorizar' ? 'Autorizar visita' : 'Rechazar visita' ?></h4>
+                    <?php if (!$visita): ?>
+                        <div class="alert alert-danger">Visita no encontrada.</div>
+                    <?php else: ?>
+                        <?php if (!empty($_GET['ok'])): ?>
+                            <div class="alert alert-success">Estado actualizado correctamente.</div>
+                        <?php endif; ?>
+                        <dl class="row">
+                            <dt class="col-sm-3">ID</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['id']) ?></dd>
+                            <dt class="col-sm-3">Documento</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['documento'] ?? '-') ?></dd>
+                            <dt class="col-sm-3">Visitante</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['visitante_nombre'] ?? '-') ?></dd>
+                            <dt class="col-sm-3">Fecha</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['fecha']) ?></dd>
+                            <dt class="col-sm-3">Motivo</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['motivo']) ?></dd>
+                            <dt class="col-sm-3">Departamento</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['departamento'] ?? '-') ?></dd>
+                            <dt class="col-sm-3">Salida</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['salida'] ?? '-') ?></dd>
+                            <dt class="col-sm-3">Estado actual</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['estado'] ?? 'pendiente') ?></dd>
+                        </dl>
+                        <form method="post" action="<?= htmlspecialchars(($GLOBALS['basePath'] ?? '') . '/visits/' . urlencode((string)$visita['id']) . '/authorize') ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+                            <input type="hidden" name="decision" value="<?= htmlspecialchars($decision) ?>">
+                            <div class="d-flex gap-2">
+                                <a href="<?= htmlspecialchars(($GLOBALS['basePath'] ?? '') . '/visits') ?>" class="btn btn-secondary">Volver</a>
+                                <button type="submit" class="btn <?= $decision==='autorizar' ? 'btn-success' : 'btn-warning' ?>">
+                                    <?= $decision==='autorizar' ? 'Confirmar autorización' : 'Confirmar rechazo' ?>
+                                </button>
+                            </div>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        </body>
+        </html>
+        <?php
+        return ob_get_clean();
+    }
+
+    // Página de confirmación: Marcar salida
+    public function showExitForm($id)
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        $this->requireRoles(['administrador','empleado']);
+
+        $stmt = $this->pdo->prepare("SELECT v.*, vi.documento, vi.nombre AS visitante_nombre FROM visitas v LEFT JOIN visitantes vi ON vi.id=v.visitante_id WHERE v.id = ?");
+        $stmt->execute([$id]);
+        $visita = $stmt->fetch();
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Marcar salida</title>
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body class="bg-light">
+        <div class="container py-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-3">Marcar salida</h4>
+                    <?php if (!$visita): ?>
+                        <div class="alert alert-danger">Visita no encontrada.</div>
+                    <?php else: ?>
+                        <?php if (!empty($_GET['ok'])): ?>
+                            <div class="alert alert-success">Salida registrada correctamente.</div>
+                        <?php endif; ?>
+                        <dl class="row">
+                            <dt class="col-sm-3">ID</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['id']) ?></dd>
+                            <dt class="col-sm-3">Documento</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['documento'] ?? '-') ?></dd>
+                            <dt class="col-sm-3">Visitante</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['visitante_nombre'] ?? '-') ?></dd>
+                            <dt class="col-sm-3">Fecha entrada</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['fecha']) ?></dd>
+                            <dt class="col-sm-3">Salida</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['salida'] ?? '-') ?></dd>
+                            <dt class="col-sm-3">Estado</dt><dd class="col-sm-9"><?= htmlspecialchars($visita['estado'] ?? 'pendiente') ?></dd>
+                        </dl>
+                        <?php if (!empty($visita['salida'])): ?>
+                            <div class="alert alert-info">Esta visita ya tiene salida registrada.</div>
+                            <a href="<?= htmlspecialchars(($GLOBALS['basePath'] ?? '') . '/visits') ?>" class="btn btn-secondary">Volver</a>
+                        <?php else: ?>
+                            <form method="post" action="<?= htmlspecialchars(($GLOBALS['basePath'] ?? '') . '/visits/' . urlencode((string)$visita['id']) . '/exit') ?>">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+                                <div class="d-flex gap-2">
+                                    <a href="<?= htmlspecialchars(($GLOBALS['basePath'] ?? '') . '/visits') ?>" class="btn btn-secondary">Volver</a>
+                                    <button type="submit" class="btn btn-outline-secondary">Marcar salida ahora</button>
+                                </div>
+                            </form>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        </body>
+        </html>
+        <?php
+        return ob_get_clean();
+    }
+
+    // Autorizar o rechazar visita (empleado/admin)
+    public function authorize($id)
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        $this->requireRoles(['administrador','empleado']);
+        $csrf = $_POST['csrf_token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            http_response_code(400); echo "CSRF inválido"; exit;
+        }
+        $decision = $_POST['decision'] ?? '';
+        if (!in_array($decision, ['autorizar','rechazar'], true)) {
+            http_response_code(400); echo "Decisión inválida"; exit;
+        }
+        $estado = $decision === 'autorizar' ? 'autorizada' : 'rechazada';
+        $userId = $_SESSION['user']['id'];
+        $stmt = $this->pdo->prepare("UPDATE visitas SET estado = ?, autorizado_por = ? WHERE id = ?");
+        $stmt->execute([$estado, $userId, $id]);
+
+        // Flashes y redirección a la página anterior (flujo modal)
+        $_SESSION['flashes'][] = ['type' => $decision==='autorizar' ? 'success' : 'warning', 'msg' => ($decision==='autorizar' ? 'Autorización exitosa.' : 'Visita rechazada.')];
+        $referer = $_SERVER['HTTP_REFERER'] ?? null;
+        if ($referer) {
+            header('Location: ' . $referer);
+        } else {
+            $bp = $GLOBALS['basePath'] ?? '';
+            header('Location: ' . $bp . '/visits');
+        }
+        exit;
+    }
+
+    // Marcar salida (empleado/admin)
+    public function markExit($id)
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        $this->requireRoles(['administrador','empleado']);
+        $csrf = $_POST['csrf_token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            http_response_code(400); echo "CSRF inválido"; exit;
+        }
+        // Si estaba pendiente, pásalo a autorizada al marcar la salida
+    $stmt = $this->pdo->prepare("UPDATE visitas SET salida = NOW(), estado = CASE WHEN estado='pendiente' THEN 'autorizada' ELSE estado END WHERE id = ?");
+        $stmt->execute([$id]);
+
+        $_SESSION['flashes'][] = ['type' => 'info', 'msg' => 'Salida registrada.'];
+        $referer = $_SERVER['HTTP_REFERER'] ?? null;
+        if ($referer) {
+            header('Location: ' . $referer);
+        } else {
+            $bp = $GLOBALS['basePath'] ?? '';
+            header('Location: ' . $bp . '/visits');
+        }
+        exit;
+    }
+
+    // Exportar CSV (solo admin)
+    public function export()
+    {
+        $this->requireAdmin();
+
+        // Reutiliza mismos filtros que index()
+        $fd  = trim($_GET['desde'] ?? '');
+        $fh  = trim($_GET['hasta'] ?? '');
+        $dep = trim($_GET['dep']   ?? '');
+        $doc = trim($_GET['doc']   ?? '');
+        $est = trim($_GET['estado']?? '');
+
+        $where  = [];
+        $params = [];
+        if ($fd !== '') { $where[] = 'v.fecha >= ?'; $params[] = $fd . ' 00:00:00'; }
+        if ($fh !== '') { $where[] = 'v.fecha <= ?'; $params[] = $fh . ' 23:59:59'; }
+        if ($dep !== '') { $where[] = 'v.departamento LIKE ?'; $params[] = '%' . $dep . '%'; }
+        if ($doc !== '') { $where[] = 'vi.documento LIKE ?'; $params[] = '%' . $doc . '%'; }
+        if ($est !== '') { $where[] = 'v.estado = ?'; $params[] = $est; }
+        $whereSql = $where ? (' WHERE ' . implode(' AND ', $where)) : '';
+
+        $sql = "SELECT v.id, vi.documento, v.departamento, v.fecha, v.salida, v.motivo, v.estado
+                FROM visitas v
+                LEFT JOIN visitantes vi ON vi.id = v.visitante_id
+                {$whereSql}
+                ORDER BY v.fecha DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll();
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="visitas.csv"');
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['ID','Documento','Departamento','Fecha entrada','Fecha salida','Motivo','Estado']);
+        foreach ($rows as $r) {
+            fputcsv($out, [$r['id'],$r['documento'],$r['departamento'],$r['fecha'],$r['salida'],$r['motivo'],$r['estado']]);
+        }
+        fclose($out);
         exit;
     }
 
@@ -264,11 +522,20 @@ class VisitController
             echo "Solicitud inválida (CSRF).";
             exit;
         }
-        // Elimina la visita
-        $stmt = $this->pdo->prepare("DELETE FROM visitas WHERE id = ?");
+    // Elimina la visita
+    $stmt = $this->pdo->prepare("DELETE FROM visitas WHERE id = ?");
         $stmt->execute([$id]);
-        // Redirigir al listado de visitas después de eliminar
-        header('Location: ' . $GLOBALS['basePath'] . '/visits');
+    // Redirigir al listado de visitas después de eliminar
+    $_SESSION['flashes'][] = ['type' => 'success', 'msg' => 'Visita eliminada.'];
+    header('Location: ' . $GLOBALS['basePath'] . '/visits');
         exit;
+    }
+
+    // Asegura que la tabla 'visitas' tenga las columnas usadas por la app
+    private function ensureVisitasColumns(): void
+    {
+        try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN salida DATETIME NULL AFTER fecha"); } catch (\Throwable $e) {}
+        try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN estado ENUM('pendiente','autorizada','rechazada') NOT NULL DEFAULT 'pendiente' AFTER departamento"); } catch (\Throwable $e) {}
+        try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN autorizado_por VARCHAR(64) NULL AFTER estado"); } catch (\Throwable $e) {}
     }
 }

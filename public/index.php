@@ -6,6 +6,9 @@
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
+// Registrar errores en un archivo local (útil para parse errors en includes)
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/php_error.log');
 
 // Helper para escribir errores en el log de Apache
 function log_error($msg) {
@@ -15,6 +18,15 @@ function log_error($msg) {
 // 1) Cargar DB y rutas (si existen)
 $dbFile = __DIR__ . '/../src/Config/database.php'; // Ruta al archivo de conexión a la base de datos
 $routesFile = __DIR__ . '/../src/Config/routes.php'; // Ruta al archivo de rutas
+
+// Soporte a mayúsculas/minúsculas en carpeta Config/config
+$dbFileUpper = __DIR__ . '/../src/Config/database.php';
+$dbFileLower = __DIR__ . '/../src/config/database.php';
+$dbFile = file_exists($dbFileUpper) ? $dbFileUpper : $dbFileLower;
+
+$routesFileUpper = __DIR__ . '/../src/Config/routes.php';
+$routesFileLower = __DIR__ . '/../src/config/routes.php';
+$routesFile = file_exists($routesFileUpper) ? $routesFileUpper : $routesFileLower;
 
 // Verifica que exista el archivo de base de datos
 if (!file_exists($dbFile)) {

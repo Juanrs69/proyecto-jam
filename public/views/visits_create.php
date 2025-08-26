@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-100 min-vh-100 d-flex align-items-center justify-content-center">
   <div class="card shadow p-4 w-100" style="max-width: 500px;">
-    <h2 class="mb-4 text-center text-primary">Crearnueva visita</h2>
+    <h2 class="mb-4 text-center text-primary">Crear nueva visita</h2>
     <?php if (isset($error)): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
@@ -22,6 +22,10 @@
         <div class="mb-3">
             <label class="form-label">Fecha</label>
             <input type="datetime-local" name="fecha" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Departamento</label>
+            <input type="text" name="departamento" class="form-control" required>
         </div>
         <div class="mb-3">
             <label class="form-label">Visitante existente</label>

@@ -20,10 +20,10 @@
         </ul>
 
         <?php
-        // Cargar PDO si no está disponible y traer visitas del visitante
-        $pdo = $pdo ?? (function() {
+        $pdo = (isset($pdo) && $pdo instanceof PDO) ? $pdo : (function() {
             return require __DIR__ . '/../../src/Config/database.php';
         })();
+        $stmt = null;
         $visitas = [];
         if (!empty($visitante['id'])) {
             $stmt = $pdo->prepare("SELECT id, fecha, motivo, departamento FROM visitas WHERE visitante_id = ? ORDER BY fecha DESC");
@@ -70,4 +70,5 @@
   &copy; <?= date('Y') ?> VisitaSegura. Todos los derechos reservados.
 </footer>
 </body>
+</html>
 </html>

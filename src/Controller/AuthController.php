@@ -248,4 +248,44 @@ class AuthController
             return $this->showRegister();
         }
     }
+
+    /**
+     * Panel Empleado
+     */
+    public function panelEmpleado(): string
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!isset($_SESSION['user'])) {
+            $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+            header('Location: ' . ($bp === '' ? '/login' : $bp . '/login'));
+            exit;
+        }
+        if (($_SESSION['user']['rol'] ?? '') !== 'empleado') {
+            header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/panel');
+            exit;
+        }
+        ob_start();
+        include __DIR__ . '/../../public/views/panel_empleado.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Panel Recepcionista
+     */
+    public function panelRecepcionista(): string
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!isset($_SESSION['user'])) {
+            $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+            header('Location: ' . ($bp === '' ? '/login' : $bp . '/login'));
+            exit;
+        }
+        if (($_SESSION['user']['rol'] ?? '') !== 'recepcionista') {
+            header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/panel');
+            exit;
+        }
+        ob_start();
+        include __DIR__ . '/../../public/views/panel_recepcionista.php';
+        return ob_get_clean();
+    }
 }

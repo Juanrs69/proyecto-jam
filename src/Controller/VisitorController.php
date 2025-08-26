@@ -5,6 +5,18 @@ namespace JAM\VisitaSegura\Controller;
 class VisitorController
 {
     private $pdo;
+    private function requireRoles(array $roles)
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/login'); exit;
+        }
+        $rol = $_SESSION['user']['rol'] ?? '';
+        if (!in_array($rol, $roles, true)) {
+            http_response_code(403);
+            echo 'Acceso restringido.'; exit;
+        }
+    }
 
     public function __construct($pdo)
     {
@@ -33,6 +45,8 @@ class VisitorController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+    // Admin, empleado y recepcionista pueden crear
+    $this->requireRoles(['administrador','empleado','recepcionista']);
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
         }
@@ -48,6 +62,8 @@ class VisitorController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+    // Admin, empleado y recepcionista pueden crear
+    $this->requireRoles(['administrador','empleado','recepcionista']);
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
             $error = "Solicitud inválida (CSRF).";
@@ -66,9 +82,10 @@ class VisitorController
             return ob_get_clean();
         }
 
-        $stmt = $this->pdo->prepare("INSERT INTO visitantes (nombre, documento, empresa) VALUES (?, ?, ?)");
-        $stmt->execute([$nombre, $documento, $empresa]);
-        header('Location: ' . $GLOBALS['basePath'] . '/visitantes');
+    $stmt = $this->pdo->prepare("INSERT INTO visitantes (nombre, documento, empresa) VALUES (?, ?, ?)");
+    $stmt->execute([$nombre, $documento, $empresa]);
+    $_SESSION['flashes'][] = ['type' => 'success', 'msg' => 'Visitante creado correctamente.'];
+    header('Location: ' . $GLOBALS['basePath'] . '/visitantes');
         exit;
     }
 
@@ -95,6 +112,8 @@ class VisitorController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+    // Solo administrador edita
+    $this->requireRoles(['administrador']);
         $stmt = $this->pdo->prepare("SELECT * FROM visitantes WHERE id = ?");
         $stmt->execute([$id]);
         $visitante = $stmt->fetch();
@@ -111,6 +130,18 @@ class VisitorController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+        // Solo administrador
+        $this->requireRoles(['administrador']);
+        $csrf = $_POST['csrf_token'] ?? '';
+        if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+            $error = "Solicitud inválida (CSRF).";
+            $stmt = $this->pdo->prepare("SELECT * FROM visitantes WHERE id = ?");
+            $stmt->execute([$id]);
+            $visitante = $stmt->fetch();
+            ob_start();
+            include __DIR__ . '/../../public/views/visitantes_edit.php';
+            return ob_get_clean();
+        }
         $nombre = trim($_POST['nombre'] ?? '');
         $documento = trim($_POST['documento'] ?? '');
         $empresa = trim($_POST['empresa'] ?? '');
@@ -125,9 +156,10 @@ class VisitorController
             return ob_get_clean();
         }
 
-        $stmt = $this->pdo->prepare("UPDATE visitantes SET nombre = ?, documento = ?, empresa = ? WHERE id = ?");
-        $stmt->execute([$nombre, $documento, $empresa, $id]);
-        header('Location: ' . $GLOBALS['basePath'] . '/visitantes');
+    $stmt = $this->pdo->prepare("UPDATE visitantes SET nombre = ?, documento = ?, empresa = ? WHERE id = ?");
+    $stmt->execute([$nombre, $documento, $empresa, $id]);
+    $_SESSION['flashes'][] = ['type' => 'success', 'msg' => 'Visitante actualizado.'];
+    header('Location: ' . $GLOBALS['basePath'] . '/visitantes');
         exit;
     }
 
@@ -138,6 +170,8 @@ class VisitorController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
+    // Solo administrador
+    $this->requireRoles(['administrador']);
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
             http_response_code(400);
@@ -147,6 +181,7 @@ class VisitorController
         try {
             $stmt = $this->pdo->prepare("DELETE FROM visitantes WHERE id = ?");
             $stmt->execute([$id]);
+            $_SESSION['flashes'][] = ['type' => 'success', 'msg' => 'Visitante eliminado.'];
             header('Location: ' . $GLOBALS['basePath'] . '/visitantes');
             exit;
         } catch (\PDOException $e) {

@@ -40,6 +40,10 @@
                 <?php endforeach; ?>
             </select>
         </div>
+        <div class="mb-3">
+            <label class="form-label">Salida (opcional)</label>
+            <input type="datetime-local" name="salida" class="form-control" value="<?= !empty($visita['salida']) ? date('Y-m-d\TH:i', strtotime($visita['salida'])) : '' ?>">
+        </div>
         <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-1"></i>Guardar cambios</button>
     </form>
     <?php else: ?>

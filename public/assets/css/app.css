@@ -1,0 +1,11 @@
+:root{--vs-bg:#f6f8fb;--vs-sidebar-start:#1f2937;--vs-sidebar-end:#111827;--vs-link:#e5e7eb}
+body{background:var(--vs-bg)}
+.sidebar{min-height:100vh;background:linear-gradient(180deg,var(--vs-sidebar-start) 0%,var(--vs-sidebar-end) 100%);color:#fff}
+.sidebar .nav-link{color:var(--vs-link);border-radius:.5rem;padding:.5rem .75rem}
+.sidebar .nav-link.active,.sidebar .nav-link:hover{background:rgba(13,110,253,.15);color:#fff}
+.content-card{border-radius:1rem}
+.table thead th{white-space:nowrap}
+.badge{letter-spacing:.2px}
+.card{border-radius:1rem}
+.table{margin-bottom:0}
+.table>thead th{font-weight:600}

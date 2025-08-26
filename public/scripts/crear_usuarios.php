@@ -13,6 +13,15 @@ try {
 } catch (\Throwable $e) {
     // columna ya existe, ignorar
 }
+try {
+    $pdo->exec("ALTER TABLE visitas ADD COLUMN salida DATETIME NULL AFTER fecha");
+} catch (\Throwable $e) { /* ya existe */ }
+try {
+    $pdo->exec("ALTER TABLE visitas ADD COLUMN estado ENUM('pendiente','autorizada','rechazada') NOT NULL DEFAULT 'pendiente' AFTER departamento");
+} catch (\Throwable $e) { /* ya existe */ }
+try {
+    $pdo->exec("ALTER TABLE visitas ADD COLUMN autorizado_por VARCHAR(64) NULL AFTER estado");
+} catch (\Throwable $e) { /* ya existe */ }
 
 function upsertUser($pdo, $correo, $nombre, $rol, $documento = null) {
     $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE correo = ?");
