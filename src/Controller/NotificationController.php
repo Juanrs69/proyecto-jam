@@ -8,6 +8,7 @@ class NotificationController
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
+    $this->ensureNotificationsTable();
     }
 
     private function requireLogin()
@@ -74,5 +75,20 @@ class NotificationController
         $referer = $_SERVER['HTTP_REFERER'] ?? null;
         header('Location: ' . ($referer ?: ($GLOBALS['basePath'] ?? '') . '/notificaciones'));
         exit;
+    }
+
+    private function ensureNotificationsTable(): void
+    {
+        try {
+            $this->pdo->exec("CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(64) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                body TEXT,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                read_at DATETIME NULL,
+                INDEX idx_user_read (user_id, read_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        } catch (\Throwable $e) {}
     }
 }

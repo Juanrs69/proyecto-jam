@@ -78,7 +78,8 @@ if (!isset($allowedSections) || !is_array($allowedSections)) {
                 $current = $_GET['section'] ?? '';
                 foreach ($menu as $key => $label) {
                     if (!in_array($key, $allowedSections, true)) continue;
-                    echo '<li class="nav-item mb-2"><a class="nav-link'.($current===$key?' active':'').'" href="?section='.h($key).'">'.h($label).'</a></li>';
+                    $href = $bp . '/panel' . '?section=' . rawurlencode($key);
+                    echo '<li class="nav-item mb-2"><a class="nav-link'.($current===$key?' active':'').'" href="'.h($href).'">'.h($label).'</a></li>';
                 }
                 ?>
                 <li class="nav-item mt-4">

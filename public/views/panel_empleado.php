@@ -32,10 +32,10 @@ $section = $_GET['section'] ?? 'dashboard';
         <div class="small mt-1"><?= h($user['nombre']) ?> <span class="badge bg-info">Empleado</span></div>
       </div>
       <ul class="nav flex-column">
-        <li class="nav-item mb-2"><a class="nav-link<?= $section==='dashboard'?' active':'' ?>" style="color:#fff" href="?section=dashboard">Dashboard</a></li>
-        <li class="nav-item mb-2"><a class="nav-link<?= $section==='visitas'?' active':'' ?>" style="color:#fff" href="?section=visitas">Visitas</a></li>
-        <li class="nav-item mb-2"><a class="nav-link<?= $section==='perfil'?' active':'' ?>" style="color:#fff" href="?section=perfil">Perfil</a></li>
-        <li class="nav-item mb-2"><a class="nav-link<?= $section==='cambiar'?' active':'' ?>" style="color:#fff" href="?section=cambiar">Cambiar contraseña</a></li>
+  <li class="nav-item mb-2"><a class="nav-link<?= $section==='dashboard'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/empleado?section=dashboard">Dashboard</a></li>
+  <li class="nav-item mb-2"><a class="nav-link<?= $section==='visitas'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/empleado?section=visitas">Visitas</a></li>
+  <li class="nav-item mb-2"><a class="nav-link<?= $section==='perfil'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/empleado?section=perfil">Perfil</a></li>
+  <li class="nav-item mb-2"><a class="nav-link<?= $section==='cambiar'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/empleado?section=cambiar">Cambiar contraseña</a></li>
         <li class="nav-item mt-4"><a class="nav-link text-danger" href="<?= h($bp) ?>/logout">Cerrar sesión</a></li>
       </ul>
     </nav>

@@ -165,7 +165,7 @@
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
-                <tr><td colspan="8" class="text-center">No hay visitas registradas.</td></tr>
+                <tr><td colspan="9" class="text-center">No hay visitas registradas.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

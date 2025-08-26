@@ -21,6 +21,20 @@ class AuthController
             session_start();
         }
 
+        // Si ya hay sesión iniciada, redirigir al panel según rol
+        if (isset($_SESSION['user'])) {
+            $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+            $rol = $_SESSION['user']['rol'] ?? '';
+            if ($rol === 'empleado') {
+                header('Location: ' . ($bp === '' ? '/panel/empleado' : $bp . '/panel/empleado'));
+            } elseif ($rol === 'recepcionista') {
+                header('Location: ' . ($bp === '' ? '/panel/recepcionista' : $bp . '/panel/recepcionista'));
+            } else {
+                header('Location: ' . ($bp === '' ? '/panel' : $bp . '/panel'));
+            }
+            exit;
+        }
+
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
         }
@@ -166,6 +180,19 @@ class AuthController
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
+        }
+        // Si ya hay sesión iniciada, redirigir al panel según rol
+        if (isset($_SESSION['user'])) {
+            $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
+            $rol = $_SESSION['user']['rol'] ?? '';
+            if ($rol === 'empleado') {
+                header('Location: ' . ($bp === '' ? '/panel/empleado' : $bp . '/panel/empleado'));
+            } elseif ($rol === 'recepcionista') {
+                header('Location: ' . ($bp === '' ? '/panel/recepcionista' : $bp . '/panel/recepcionista'));
+            } else {
+                header('Location: ' . ($bp === '' ? '/panel' : $bp . '/panel'));
+            }
+            exit;
         }
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
