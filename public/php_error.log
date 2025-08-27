@@ -13,3 +13,78 @@
 [26-Aug-2025 21:40:17 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
 [26-Aug-2025 21:45:21 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
 [26-Aug-2025 22:16:58 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:00 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:06 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:13 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:25 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:29 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:33 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:36 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:38 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:40 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:21:47 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:32:56 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:33:04 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:33:08 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:33:11 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:33:21 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:33:40 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:44:45 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:44:48 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:44:51 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:44:54 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[26-Aug-2025 22:45:22 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[26-Aug-2025 22:45:26 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:36:15 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:36:28 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:36:31 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:36:45 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:36:48 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:36:57 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:49:59 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:02 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:04 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:13 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:24 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:27 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:41 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:43 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:50:54 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:51:31 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 16:57:08 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:57:13 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 16:59:50 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:00:09 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 17:00:11 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> Cannot access offset of type string on string
+[27-Aug-2025 17:16:05 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:16:16 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:16:19 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:16:28 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:16:32 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:16:42 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:21:24 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:39:03 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> syntax error, unexpected end of file
+[27-Aug-2025 17:39:04 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> syntax error, unexpected end of file
+[27-Aug-2025 17:39:07 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:39:09 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> syntax error, unexpected end of file
+[27-Aug-2025 17:39:59 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> syntax error, unexpected end of file
+[27-Aug-2025 17:40:01 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:40:03 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panel -> syntax error, unexpected end of file
+[27-Aug-2025 17:48:33 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:48:40 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 17:48:48 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelEmpleado -> Cannot access offset of type string on string
+[27-Aug-2025 18:03:44 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
+[27-Aug-2025 18:03:46 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
+[27-Aug-2025 18:03:48 Europe/Berlin] [VisitaSegura] Excepción en JAM\VisitaSegura\Controller\AuthController::panelRecepcionista -> Cannot access offset of type string on string
+[27-Aug-2025 21:55:26 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/images/image1.png - procesada como /docs/proyecto-jam/images/image1.png
+[27-Aug-2025 21:55:26 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/images/image2.png - procesada como /docs/proyecto-jam/images/image2.png
+[27-Aug-2025 21:55:26 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/images/image3.png - procesada como /docs/proyecto-jam/images/image3.png
+[27-Aug-2025 21:55:26 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 21:55:34 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 21:56:31 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 21:56:33 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 21:58:33 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 21:58:39 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 21:58:42 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 21:59:18 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[27-Aug-2025 22:00:17 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html

@@ -23,7 +23,9 @@ class NotificationController
     public function index()
     {
         $this->requireLogin();
-        $userId = $_SESSION['user']['id'];
+    $u = $_SESSION['user'] ?? null;
+    $userId = is_array($u) ? ($u['id'] ?? null) : null;
+    if (!$userId) { http_response_code(403); echo 'Acceso restringido.'; exit; }
 
         // Traer no leídas primero y luego leídas
         $stmt = $this->pdo->prepare("SELECT * FROM notifications WHERE user_id = ? AND read_at IS NULL ORDER BY created_at DESC LIMIT 50");
@@ -48,7 +50,9 @@ class NotificationController
             echo 'CSRF inválido';
             exit;
         }
-        $userId = $_SESSION['user']['id'];
+    $u = $_SESSION['user'] ?? null;
+    $userId = is_array($u) ? ($u['id'] ?? null) : null;
+    if (!$userId) { http_response_code(403); echo 'Acceso restringido.'; exit; }
         $st = $this->pdo->prepare("UPDATE notifications SET read_at = NOW() WHERE id = ? AND user_id = ?");
         $st->execute([$id, $userId]);
 
@@ -67,7 +71,9 @@ class NotificationController
             echo 'CSRF inválido';
             exit;
         }
-        $userId = $_SESSION['user']['id'];
+    $u = $_SESSION['user'] ?? null;
+    $userId = is_array($u) ? ($u['id'] ?? null) : null;
+    if (!$userId) { http_response_code(403); echo 'Acceso restringido.'; exit; }
         $st = $this->pdo->prepare("UPDATE notifications SET read_at = NOW() WHERE user_id = ? AND read_at IS NULL");
         $st->execute([$userId]);
 

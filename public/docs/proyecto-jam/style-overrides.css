@@ -1,0 +1,21 @@
+/* Estilos suaves que mejoran legibilidad sin romper maquetaciones */
+html,body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;color:#212529;line-height:1.5}
+body{background:#fff}
+img{max-width:100%;height:auto}
+figure{margin:0 0 1rem}
+figcaption{font-size:.875rem;color:#6c757d}
+h1,h2,h3,h4,h5,h6{margin:.75rem 0 .5rem;font-weight:600}
+p,ul,ol{margin:0 0 .75rem}
+ul,ol{padding-left:1.25rem}
+a{color:#0d6efd}
+a:hover{color:#0b5ed7}
+hr{border:0;border-top:1px solid #dee2e6;margin:1rem 0}
+pre,code,kbd,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+pre{background:#f8f9fa;border:1px solid #e9ecef;border-radius:.375rem;padding:.75rem;overflow:auto}
+code{background:#f1f3f5;border:1px solid #e9ecef;border-radius:.25rem;padding:.1rem .25rem}
+table{width:100%;border-collapse:collapse;margin:0 0 1rem}
+th,td{border:1px solid #dee2e6;padding:.5rem;vertical-align:top}
+th{background:#f8f9fa;font-weight:600}
+blockquote{border-left:4px solid #e9ecef;padding:.5rem 1rem;color:#495057;background:#fcfcfd}
+/* Espaciado general para documentos sueltos */
+body{padding:1rem}

@@ -1,63 +1,95 @@
 <?php
 namespace JAM\VisitaSegura\Controller;
 
-// Controlador para gestionar las visitas (CRUD)
+/**
+ * Controlador para gestionar visitas (CRUD + acciones) y utilidades relacionadas.
+ *
+ * Responsabilidades principales:
+ * - Listar visitas con filtros y paginación.
+ * - Crear, editar, eliminar visitas.
+ * - Autorizar/Rechazar visitas; Marcar salida.
+ * - Exportar CSV.
+ * - Asegurar columnas requeridas en la tabla 'visitas' y la tabla de notificaciones.
+ *
+ * Notas de seguridad:
+ * - Todas las mutaciones usan validación CSRF y control de roles.
+ * - Redirecciones post-acción preservan el contexto del panel (referer cuando aplica).
+ */
 class VisitController
 {
     // Propiedad para la conexión PDO
     private $pdo;
 
     // Constructor: recibe la conexión PDO
+    /**
+     * Constructor.
+     * @param \PDO $pdo Conexión a base de datos.
+     */
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
-    $this->ensureVisitasColumns();
-    $this->ensureNotificationsTable();
+        // Garantiza que las columnas requeridas existen (idempotente)
+        $this->ensureVisitasColumns();
+        // Crea la tabla de notificaciones si no existe
+        $this->ensureNotificationsTable();
     }
 
+    /**
+     * Restringe acceso a rol Administrador.
+     */
     private function requireAdmin()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
         }
-        if (($_SESSION['user']['rol'] ?? '') !== 'administrador') {
+        $u = $_SESSION['user'] ?? null;
+        $rolSafe = is_array($u) ? ($u['rol'] ?? '') : '';
+        if ($rolSafe !== 'administrador') {
             http_response_code(403);
             echo 'Acceso restringido: se requiere rol administrador.';
             exit;
         }
     }
 
+    /**
+     * Restringe acceso a un conjunto de roles válidos.
+     * @param string[] $roles
+     */
     private function requireRoles(array $roles)
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
         }
-        $rol = $_SESSION['user']['rol'] ?? '';
+        $u = $_SESSION['user'] ?? null;
+        $rol = is_array($u) ? ($u['rol'] ?? '') : '';
         if (!in_array($rol, $roles, true)) {
             http_response_code(403);
             echo 'Acceso restringido.'; exit;
         }
     }
 
-    // Muestra el listado de visitas
+    /**
+     * Listado de visitas con filtros y paginación.
+     * @return string HTML renderizado
+     */
     public function index()
     {
         session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
         }
-        // Administradores y empleados pueden ver el listado
+        // Administrador/Empleado/Recepcionista pueden ver el listado
         $this->requireRoles(['administrador','empleado','recepcionista']);
 
         // Filtros
         $fd  = trim($_GET['desde'] ?? ''); // formato esperado: YYYY-MM-DD
         $fh  = trim($_GET['hasta'] ?? ''); // formato esperado: YYYY-MM-DD
-    $dep = trim($_GET['dep']   ?? '');
+        $dep = trim($_GET['dep']   ?? '');
         $doc = trim($_GET['doc']   ?? '');
-    $est = trim($_GET['estado']?? '');
-    $emp = trim($_GET['emp']   ?? ''); // búsqueda por empleado anfitrión (nombre o id)
+        $est = trim($_GET['estado']?? '');
+        $emp = trim($_GET['emp']   ?? ''); // búsqueda por empleado anfitrión (nombre o id)
 
         $where  = [];
         $params = [];
@@ -80,7 +112,7 @@ class VisitController
         $page = max(1, (int)($_GET['p'] ?? 1));
         $offset = ($page - 1) * $perPage;
 
-        // Total (con join para filtro por doc)
+    // Total (con join para filtro por doc)
     $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM visitas v 
                       LEFT JOIN visitantes vi ON vi.id = v.visitante_id
                       LEFT JOIN usuarios u ON u.id = v.anfitrion_id
@@ -88,7 +120,7 @@ class VisitController
         $stmt->execute($params);
         $total = (int)$stmt->fetchColumn();
 
-        // Datos
+    // Datos
     $sql = "SELECT v.*, u.nombre AS empleado_nombre FROM visitas v
         LEFT JOIN visitantes vi ON vi.id = v.visitante_id
         LEFT JOIN usuarios u ON u.id = v.anfitrion_id
@@ -114,7 +146,10 @@ class VisitController
         return ob_get_clean();
     }
 
-    // Muestra el formulario para crear una nueva visita
+    /**
+     * Formulario de creación de visita.
+     * @return string HTML
+     */
     public function showCreateForm()
     {
         session_start();
@@ -122,12 +157,12 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
-    $this->requireRoles(['administrador','empleado','recepcionista']);
+        $this->requireRoles(['administrador','empleado','recepcionista']);
         // Obtiene todos los visitantes para el select del formulario
-    $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
-    $visitantes = $stmt->fetchAll();
-    // empleados para asignar como anfitrión (admin/recepcionista)
-    $empleados = $this->pdo->query("SELECT id, nombre FROM usuarios WHERE rol='empleado' ORDER BY nombre")->fetchAll();
+        $stmt = $this->pdo->query("SELECT id, nombre FROM visitantes ORDER BY nombre");
+        $visitantes = $stmt->fetchAll();
+        // Empleados para asignar como anfitrión (visible para admin/recepcionista)
+        $empleados = $this->pdo->query("SELECT id, nombre FROM usuarios WHERE rol='empleado' ORDER BY nombre")->fetchAll();
 
         // Incluye la vista del formulario de creación
         ob_start();
@@ -135,7 +170,11 @@ class VisitController
         return ob_get_clean();
     }
 
-    // Procesa el guardado de una nueva visita (POST)
+    /**
+     * Guardado de nueva visita (POST).
+     * - Valida CSRF, crea visitante si se indicó uno nuevo, asigna anfitrión.
+     * - Notifica al anfitrión.
+     */
     public function store()
     {
         session_start();
@@ -143,7 +182,7 @@ class VisitController
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
         }
-    $this->requireRoles(['administrador','empleado','recepcionista']);
+        $this->requireRoles(['administrador','empleado','recepcionista']);
         // Validación CSRF
         $csrf = $_POST['csrf_token'] ?? '';
         if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
@@ -182,10 +221,11 @@ class VisitController
             $visitante = $this->pdo->lastInsertId();
         }
 
-        // Resolver anfitrión: si rol empleado y no viene, usar el actual
-        $rol = $_SESSION['user']['rol'] ?? '';
+    // Resolver anfitrión: si rol empleado y no viene, usar el actual
+        $u = $_SESSION['user'] ?? null;
+        $rol = is_array($u) ? ($u['rol'] ?? '') : '';
         if ($rol === 'empleado' && $anfitrion_id === '') {
-            $anfitrion_id = $_SESSION['user']['id'] ?? '';
+            $anfitrion_id = is_array($u) ? ($u['id'] ?? '') : '';
         }
         if ($anfitrion_id === '') { $anfitrion_id = null; }
 
@@ -194,7 +234,7 @@ class VisitController
         $stmt->execute([$visitante, $fecha, $motivo, $departamento !== '' ? $departamento : null, $anfitrion_id]);
         $visitaId = $this->pdo->lastInsertId();
 
-        // Notificar al anfitrión (si aplica)
+    // Notificar al anfitrión (si aplica)
         if (!empty($anfitrion_id)) {
             $this->notifyUser($anfitrion_id, 'Nuevo visitante', 'Se ha registrado una visita que te tiene como anfitrión. ID visita: ' . $visitaId);
         }
@@ -205,7 +245,11 @@ class VisitController
         exit;
     }
 
-    // Muestra el detalle de una visita
+    /**
+     * Detalle de una visita.
+     * @param mixed $id
+     * @return string HTML
+     */
     public function show($id)
     {
         // Permitir a admin/empleado/recepcionista ver detalle
@@ -229,7 +273,9 @@ class VisitController
         return ob_get_clean();
     }
 
-    // Muestra el formulario para editar una visita (solo admin)
+    /**
+     * Formulario de edición (solo admin).
+     */
     public function showEditForm($id)
     {
         $this->requireAdmin();
@@ -255,7 +301,9 @@ class VisitController
         return ob_get_clean();
     }
 
-    // Procesa la actualización de una visita (POST)
+    /**
+     * Actualización de visita (POST) (solo admin).
+     */
     public function update($id)
     {
         $this->requireAdmin();
@@ -315,7 +363,9 @@ class VisitController
         exit;
     }
 
-    // Página de confirmación: Autorizar/Rechazar
+    /**
+     * Página de confirmación para Autorizar/Rechazar (admin/empleado).
+     */
     public function showAuthorizeForm($id)
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -381,7 +431,9 @@ class VisitController
         return ob_get_clean();
     }
 
-    // Página de confirmación: Marcar salida
+    /**
+     * Página de confirmación para Marcar salida (admin/empleado).
+     */
     public function showExitForm($id)
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -442,7 +494,9 @@ class VisitController
         return ob_get_clean();
     }
 
-    // Autorizar o rechazar visita (empleado/admin)
+    /**
+     * Acción: Autorizar o Rechazar visita (empleado/admin)
+     */
     public function authorize($id)
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -456,7 +510,9 @@ class VisitController
             http_response_code(400); echo "Decisión inválida"; exit;
         }
         $estado = $decision === 'autorizar' ? 'autorizada' : 'rechazada';
-        $userId = $_SESSION['user']['id'];
+    $u = $_SESSION['user'] ?? null;
+    $userId = is_array($u) ? ($u['id'] ?? null) : null;
+    if (!$userId) { http_response_code(403); echo 'Acceso restringido.'; exit; }
         $stmt = $this->pdo->prepare("UPDATE visitas SET estado = ?, autorizado_por = ? WHERE id = ?");
         $stmt->execute([$estado, $userId, $id]);
 
@@ -472,7 +528,9 @@ class VisitController
         exit;
     }
 
-    // Marcar salida (empleado/admin)
+    /**
+     * Acción: Marcar salida (empleado/admin)
+     */
     public function markExit($id)
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -496,7 +554,9 @@ class VisitController
         exit;
     }
 
-    // Exportar CSV (solo admin)
+    /**
+     * Exportar CSV (solo admin). Reutiliza filtros de index().
+     */
     public function export()
     {
         $this->requireAdmin();
@@ -541,7 +601,9 @@ class VisitController
         exit;
     }
 
-    // Elimina una visita
+    /**
+     * Eliminar visita (solo admin).
+     */
     public function delete($id)
     {
         session_start();
@@ -566,7 +628,9 @@ class VisitController
         exit;
     }
 
-    // Asegura que la tabla 'visitas' tenga las columnas usadas por la app
+    /**
+     * Asegura que la tabla 'visitas' tenga las columnas usadas por la app (idempotente).
+     */
     private function ensureVisitasColumns(): void
     {
         try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN salida DATETIME NULL AFTER fecha"); } catch (\Throwable $e) {}
@@ -575,6 +639,9 @@ class VisitController
         try { $this->pdo->exec("ALTER TABLE visitas ADD COLUMN anfitrion_id VARCHAR(64) NULL AFTER visitante_id"); } catch (\Throwable $e) {}
     }
 
+    /**
+     * Crea la tabla de notificaciones si no existe.
+     */
     private function ensureNotificationsTable(): void
     {
         try {
@@ -590,6 +657,9 @@ class VisitController
         } catch (\Throwable $e) {}
     }
 
+    /**
+     * Inserta una notificación para un usuario.
+     */
     private function notifyUser(string $userId, string $title, string $body): void
     {
         try {

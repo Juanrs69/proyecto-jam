@@ -27,6 +27,8 @@ return [
         '/visits'        => [VisitController::class, 'store'],
         '/visitantes'    => [VisitorController::class, 'store'],
         '/panel'         => [AuthController::class, 'panel'], // <- necesario para manejar POST del panel
+    '/panel/empleado'      => [AuthController::class, 'panelEmpleado'],
+    '/panel/recepcionista' => [AuthController::class, 'panelRecepcionista'],
     '/notificaciones/leer-todas' => [NotificationController::class, 'markAllRead'],
     ],
     // Rutas con parámetros

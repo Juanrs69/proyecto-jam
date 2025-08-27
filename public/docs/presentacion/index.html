@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visita Segura — Presentación</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/white.css" id="theme">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js-menu@2.1.0/menu.css">
+  <style>
+    :root { --brand:#0d6efd; --accent:#20c997; }
+    .reveal .slides{ font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif }
+    .brand { color: var(--brand) }
+    .accent { color: var(--accent) }
+    .subtitle { font-size: 1.2rem; color:#555 }
+    .tag { display:inline-block; padding:.25rem .5rem; border-radius:999px; background:#eef5ff; color:#0b5ed7; font-size:.8rem; margin-right:.25rem }
+    .two-col { display:grid; grid-template-columns: 1.1fr .9fr; gap: 2rem; align-items:center }
+    .img-frame { border-radius:.75rem; box-shadow: 0 8px 24px rgba(0,0,0,.15) }
+    .small { font-size:.9rem }
+    .foot { color:#777; font-size:.8rem }
+    .reveal section img{ max-height:62vh; object-fit:contain }
+    @media print { .reveal .slides section{ page-break-after: always } }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- Portada -->
+      <section data-background-gradient="linear-gradient(135deg, #eef5ff, #e8fff8)">
+        <h2 class="brand">Visita Segura</h2>
+        <p class="subtitle">Gestión segura de visitantes — JAM Corporation</p>
+        <p>
+          <span class="tag">PHP 8</span>
+          <span class="tag">MySQL/xampp</span>
+          <span class="tag">Bootstrap 5</span>
+          <span class="tag">Tailwind (paneles)</span>
+        </p>
+        <p class="small">Equipo: Juan Alejandro Ramírez · María del Mar Ramírez · Jeison David León · Año 2025 · Sede Cali</p>
+      </section>
+
+      <!-- Problema y objetivo -->
+      <section>
+        <h3 class="brand">Problema y Objetivo</h3>
+        <div class="two-col">
+          <div>
+            <ul>
+              <li>Ingresos y salidas sin trazabilidad.</li>
+              <li>Autorizaciones lentas y poco visibles.</li>
+              <li>Reportes manuales y poco confiables.</li>
+            </ul>
+            <p class="accent"><strong>Objetivo:</strong> digitalizar el control de visitas con seguridad, rapidez y evidencia.</p>
+          </div>
+          <div>
+            <img class="img-frame" src="../proyecto-jam/images/image2.png" alt="Diagrama de Caso de Uso" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Alcance funcional -->
+      <section>
+        <h3 class="brand">Alcance Funcional</h3>
+        <ul>
+          <li>Registro de visitantes (documento único).</li>
+          <li>Autorización/Rechazo por empleado.</li>
+          <li>Entrada/Salida con marcas de tiempo.</li>
+          <li>Búsqueda y filtros por fecha, persona y estado.</li>
+          <li>Notificaciones al empleado anfitrión.</li>
+          <li>Reportes y exportación CSV.</li>
+        </ul>
+      </section>
+
+      <!-- Arquitectura y tecnologías -->
+      <section>
+        <h3 class="brand">Arquitectura y Tecnologías</h3>
+        <div class="two-col">
+          <div>
+            <ul>
+              <li>PHP 8 + Apache (XAMPP), PDO con MySQL.</li>
+              <li>Ruteo propio, controladores MVC ligero.</li>
+              <li>Bootstrap 5 y Tailwind en paneles.</li>
+              <li>CSRF en mutaciones y RBAC por roles.</li>
+              <li>Notificaciones en BD y toasts en UI.</li>
+            </ul>
+          </div>
+          <div>
+            <img class="img-frame" src="../proyecto-jam/images/image3.png" alt="Modelo relacional" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Roles y flujo -->
+      <section>
+        <h3 class="brand">Roles y Flujo</h3>
+        <ul>
+          <li><strong>Recepcionista:</strong> registra visitantes y crea visitas.</li>
+          <li><strong>Empleado:</strong> autoriza/rechaza y registra salida.</li>
+          <li><strong>Admin:</strong> gestiona usuarios, ve reportes y todo el historial.</li>
+        </ul>
+        <p class="small foot">Interacciones en modales, sin saltos de página. Redirecciones seguras.</p>
+      </section>
+
+      <!-- Seguridad -->
+      <section>
+        <h3 class="brand">Seguridad</h3>
+        <ul>
+          <li>Protección CSRF en todas las acciones de escritura.</li>
+          <li>Roles y permisos (RBAC) en controladores y vistas.</li>
+          <li>Sesiones endurecidas y validaciones de entrada.</li>
+          <li>Redirecciones referer-safe para evitar open redirects.</li>
+        </ul>
+      </section>
+
+      <!-- Vistas principales (screenshots) -->
+      <section>
+        <h3 class="brand">Interfaz</h3>
+        <div class="two-col">
+          <div>
+            <img class="img-frame" src="../proyecto-jam/images/interfaz.png" alt="Diagrama de clases" />
+          </div>
+          <div>
+            <ul>
+              <li>UI con Bootstrap 5 + Icons.</li>
+              <li>Toasts y notificaciones.</li>
+              <li>CSV export y filtros rápidos.</li>
+            </ul>
+            <p class="small">Manual de Usuario y Técnico disponibles en <code>/docs</code> con opción PDF.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resultados y demo -->
+      <section>
+        <h3 class="brand">Resultados y Demo</h3>
+        <ul>
+          <li>Paneles estables, sin redeclaraciones PHP.</li>
+          <li>Flujos completos con modales y feedback.</li>
+          <li>Documentación HTML + exportación a PDF.</li>
+          <li>Sección Proyecto JAM integrada (visor y PDF).</li>
+        </ul>
+      </section>
+
+      <!-- Conclusiones -->
+      <section>
+        <h3 class="brand">Conclusiones</h3>
+        <ul>
+          <li>Sistema listo para uso académico o empresarial y extensible.</li>
+          <li>Base sólida de seguridad y mantenibilidad.</li>
+          <li>Ruta clara para ampliaciones (correo SMTP, dashboards, etc.).</li>
+        </ul>
+        <p class="foot">Repositorio local: <code>c:/xampp/htdocs/visita-segura</code></p>
+      </section>
+
+      <!-- Equipo -->
+      <section>
+        <h3 class="brand">Equipo</h3>
+        <p>Juan Alejandro Ramírez · María del Mar Ramírez · Jeison David León</p>
+        <p class="small">Ingeniería de Software III — 2025 · Corporación Uniremington — Sede Cali</p>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js-menu@2.1.0/menu.js"></script>
+  <script>
+    const deck = new Reveal({
+      hash: true,
+      slideNumber: true,
+      transition: 'slide',
+      plugins: [ RevealMenu ]
+    });
+    deck.initialize();
+  </script>
+</body>
+</html>

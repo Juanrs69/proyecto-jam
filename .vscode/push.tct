@@ -1,5 +1,5 @@
 git add .
-git commit -m "CRUD de usuarios/visitantes/visitas, “departamento” en visitas, seguridad (CSRF/roles), enrutamiento POST, UI con íconos, paginación/filtros, vista “Ver visitas” en modal e infraestructura lista."
+git commit -m "avances y cambios"
 git push
 
 panel.php: Es el panel principal y menú de navegación.

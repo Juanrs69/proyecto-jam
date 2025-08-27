@@ -24,7 +24,8 @@ class AuthController
         // Si ya hay sesión iniciada, redirigir al panel según rol
         if (isset($_SESSION['user'])) {
             $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
-            $rol = $_SESSION['user']['rol'] ?? '';
+            $u = $_SESSION['user'] ?? null;
+            $rol = is_array($u) ? ($u['rol'] ?? '') : '';
             if ($rol === 'empleado') {
                 header('Location: ' . ($bp === '' ? '/panel/empleado' : $bp . '/panel/empleado'));
             } elseif ($rol === 'recepcionista') {
@@ -184,7 +185,8 @@ class AuthController
         // Si ya hay sesión iniciada, redirigir al panel según rol
         if (isset($_SESSION['user'])) {
             $bp = isset($GLOBALS['basePath']) ? rtrim($GLOBALS['basePath'], '/') : '';
-            $rol = $_SESSION['user']['rol'] ?? '';
+            $u = $_SESSION['user'] ?? null;
+            $rol = is_array($u) ? ($u['rol'] ?? '') : '';
             if ($rol === 'empleado') {
                 header('Location: ' . ($bp === '' ? '/panel/empleado' : $bp . '/panel/empleado'));
             } elseif ($rol === 'recepcionista') {
@@ -287,7 +289,8 @@ class AuthController
             header('Location: ' . ($bp === '' ? '/login' : $bp . '/login'));
             exit;
         }
-        if (($_SESSION['user']['rol'] ?? '') !== 'empleado') {
+    $u = $_SESSION['user'] ?? null;
+    if ((is_array($u) ? ($u['rol'] ?? '') : '') !== 'empleado') {
             header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/panel');
             exit;
         }
@@ -307,7 +310,8 @@ class AuthController
             header('Location: ' . ($bp === '' ? '/login' : $bp . '/login'));
             exit;
         }
-        if (($_SESSION['user']['rol'] ?? '') !== 'recepcionista') {
+    $u = $_SESSION['user'] ?? null;
+    if ((is_array($u) ? ($u['rol'] ?? '') : '') !== 'recepcionista') {
             header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/panel');
             exit;
         }

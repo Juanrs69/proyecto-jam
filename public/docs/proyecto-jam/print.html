@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Imprimir Proyecto JAM</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="style-overrides.css" rel="stylesheet">
+  <style>
+    @media print{.d-print-none{display:none!important}}
+    body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
+    .note{background:#fff3cd;border:1px solid #ffe69c;color:#7f6f00;border-radius:.25rem;padding:.5rem .75rem}
+  </style>
+</head>
+<body>
+<div class="container py-3">
+  <div class="d-print-none note mb-3 small">
+    Se aplican estilos de lectura para mejorar la salida a PDF. Esta barra no aparece en la impresión.
+  </div>
+  <div id="content"></div>
+</div>
+<script>
+(async function(){
+  try{
+    const res = await fetch('proyectojam.html', {cache:'no-store'});
+    const html = await res.text();
+    const container = document.getElementById('content');
+    container.innerHTML = html;
+    // Esperar un frame para que el DOM se acomode, luego imprimir
+    setTimeout(()=>{ window.print(); }, 400);
+  }catch(e){
+    document.getElementById('content').innerHTML = '<div class="alert alert-danger">No se pudo cargar proyectojam.html</div>';
+  }
+})();
+</script>
+</body>
+</html>

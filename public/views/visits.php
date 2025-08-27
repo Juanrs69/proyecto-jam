@@ -18,7 +18,11 @@
             $showSearch = true;
             include __DIR__ . '/partials/ui/header.php';
         ?>
-        <?php if (session_status() !== PHP_SESSION_ACTIVE) session_start(); $rolActual = $_SESSION['user']['rol'] ?? ($rolActual ?? ''); $bp = $GLOBALS['basePath'] ?? ''; ?>
+        <?php if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+            $sessUser = $_SESSION['user'] ?? null;
+            $rolActual = is_array($sessUser) ? ($sessUser['rol'] ?? '') : '';
+            $bp = $GLOBALS['basePath'] ?? '';
+        ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Listado de visitas</h2>
         <div class="d-flex gap-2">
@@ -42,7 +46,7 @@
               'dep'   => $f['dep']   ?? '',
               'doc'   => $f['doc']   ?? '',
               'estado'=> $f['estado']?? '',
-          'emp'   => $f['emp']   ?? '',
+              'emp'   => $f['emp']   ?? '',
           ] + $extra, fn($v) => $v !== '' && $v !== null));
       };
       // Reusar $rolActual ya calculado arriba
@@ -210,7 +214,5 @@
   &copy; <?= date('Y') ?> VisitaSegura. Todos los derechos reservados.
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
 </body>
 </html>

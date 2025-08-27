@@ -1,11 +1,17 @@
-<?php
+<?php // Panel principal (admin o redirección a panel por rol)
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $user = $_SESSION['user'] ?? null;
-if (!$user) {
+// Asegurar que $user sea un arreglo válido; si no, forzar login
+if (!is_array($user)) {
     header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/login');
     exit;
 }
+// Acceso seguro a rol
 $rol = $user['rol'] ?? '';
+// Variables seguras para imprimir datos del usuario
+$displayName = is_array($user) ? ($user['nombre'] ?? '') : '';
+$displayEmail = is_array($user) ? ($user['correo'] ?? '') : '';
+$displayId = is_array($user) ? ($user['id'] ?? null) : null;
 $pdo = $pdo ?? (function() {
     // Carga PDO si no está disponible (para vistas directas)
     return require __DIR__ . '/../../src/Config/database.php';
@@ -24,14 +30,16 @@ $isAdmin = ($rol === 'administrador');
 $isEmp   = ($rol === 'empleado');
 $isRecep = ($rol === 'recepcionista');
 
-// Si el rol es empleado o recepcionista, delegar al panel específico (condicional para evitar fatal).
-if ($rol === 'empleado') {
-    $alt = __DIR__ . '/panel_empleado.php';
-    if (file_exists($alt)) { require $alt; return; }
-}
-if ($rol === 'recepcionista') {
-    $alt = __DIR__ . '/panel_recepcionista.php';
-    if (file_exists($alt)) { require $alt; return; }
+// Si el rol es empleado o recepcionista, delegar al panel específico, salvo que ya vengamos de allí
+if (empty($fromRolePanel)) {
+    if ($rol === 'empleado') {
+        $alt = __DIR__ . '/panel_empleado.php';
+        if (file_exists($alt)) { require $alt; return; }
+    }
+    if ($rol === 'recepcionista') {
+        $alt = __DIR__ . '/panel_recepcionista.php';
+        if (file_exists($alt)) { require $alt; return; }
+    }
 }
 
 // Definir secciones permitidas por rol (equivale a “panel por rol” sin crear archivos nuevos)
@@ -59,35 +67,44 @@ if (!isset($allowedSections) || !is_array($allowedSections)) {
 <body class="bg-gray-100">
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
+    <!-- Sidebar -->
         <nav class="col-md-3 col-lg-2 d-md-block sidebar py-4 px-2">
             <div class="text-center mb-4">
                 <span class="fw-bold fs-5">VisitaSegura</span>
-                <div class="small mt-1"><?= htmlspecialchars($user['nombre']) ?> <span class="badge bg-info"><?= htmlspecialchars($rol) ?></span></div>
+                <div class="small mt-1"><?= h($displayName) ?> <span class="badge bg-info"><?= h($rol) ?></span></div>
             </div>
-            <ul class="nav flex-column">
-                <?php
-                $menu = [
-                  'dashboard' => 'Dashboard',
-                  'usuarios'  => 'Usuarios',
-                  'visitantes'=> 'Visitantes',
-                  'visitas'   => 'Visitas',
-                  'perfil'    => 'Perfil',
-                  'cambiar'   => 'Cambiar contraseña'
-                ];
-                $current = $_GET['section'] ?? '';
-                foreach ($menu as $key => $label) {
-                    if (!in_array($key, $allowedSections, true)) continue;
-                    $href = $bp . '/panel' . '?section=' . rawurlencode($key);
-                    echo '<li class="nav-item mb-2"><a class="nav-link'.($current===$key?' active':'').'" href="'.h($href).'">'.h($label).'</a></li>';
-                }
-                ?>
-                <li class="nav-item mt-4">
-                    <a class="nav-link text-danger" href="<?= h($bp) ?>/logout">Cerrar sesión</a>
-                </li>
-            </ul>
+                        <ul class="nav flex-column"> <!-- Menú con iconos -->
+                                <?php
+                                $menu = [
+                                    'dashboard' => 'Dashboard',
+                                    'usuarios'  => 'Usuarios',
+                                    'visitantes'=> 'Visitantes',
+                                    'visitas'   => 'Visitas',
+                                    'perfil'    => 'Perfil',
+                                    'cambiar'   => 'Cambiar contraseña'
+                                ];
+                                $icons = [
+                                    'dashboard' => 'bi-speedometer2',
+                                    'usuarios'  => 'bi-people-gear',
+                                    'visitantes'=> 'bi-people',
+                                    'visitas'   => 'bi-calendar-check',
+                                    'perfil'    => 'bi-person-circle',
+                                    'cambiar'   => 'bi-key'
+                                ];
+                                $current = $_GET['section'] ?? '';
+                                foreach ($menu as $key => $label) {
+                                        if (!in_array($key, $allowedSections, true)) continue;
+                                        $href = $bp . '/panel' . '?section=' . rawurlencode($key);
+                                        $icon = $icons[$key] ?? 'bi-dot';
+                                        echo '<li class="nav-item mb-2"><a class="nav-link'.($current===$key?' active':'').'" href="'.h($href).'"><i class="bi '.$icon.' me-1"></i>'.h($label).'</a></li>';
+                                }
+                                ?>
+                                <li class="nav-item mt-4">
+                                        <a class="nav-link text-danger" href="<?= h($bp) ?>/logout"><i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión</a>
+                                </li>
+                        </ul>
         </nav>
-        <!-- Main content -->
+    <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
             <?php include __DIR__ . '/partials/ui/toasts.php'; ?>
                         <?php
@@ -1042,18 +1059,18 @@ if (!isset($allowedSections) || !is_array($allowedSections)) {
                         } // <-- cierra el else (listado) del case 'visitas'
                         break;
 
-                    case 'perfil':
-                        ?>
-                        <h2>Perfil</h2>
-                        <div class="card">
-                          <div class="card-body">
-                            <p><strong>Nombre:</strong> <?= htmlspecialchars($user['nombre']) ?></p>
-                            <p><strong>Correo:</strong> <?= htmlspecialchars($user['correo']) ?></p>
-                            <p><strong>Rol:</strong> <span class="badge bg-info"><?= htmlspecialchars($rol) ?></span></p>
-                          </div>
-                        </div>
-                        <?php
-                        break;
+                                        case 'perfil':
+                                                ?>
+                                                <h2>Perfil</h2>
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <p><strong>Nombre:</strong> <?= h($displayName) ?></p>
+                                                        <p><strong>Correo:</strong> <?= h($displayEmail) ?></p>
+                                                        <p><strong>Rol:</strong> <span class="badge bg-info"><?= h($rol) ?></span></p>
+                                                    </div>
+                                                </div>
+                                                <?php
+                                                break;
 
                     case 'cambiar':
                         // Procesar cambio de contraseña

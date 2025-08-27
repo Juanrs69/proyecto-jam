@@ -8,12 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-vh-100 d-flex align-items-center justify-content-center">
-  <div class="card shadow p-4 w-100" style="max-width: 500px;">
+    <div class="card shadow p-4 w-100" style="max-width: 500px;">
+        <?php if (session_status() !== PHP_SESSION_ACTIVE) @session_start(); $bp = $GLOBALS['basePath'] ?? ''; ?>
     <h2 class="mb-4 text-center text-primary">Crear nueva visita</h2>
     <?php if (isset($error)): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
-    <form method="post" action="<?= $GLOBALS['basePath'] ?>/visits">
+    <form method="post" action="<?= htmlspecialchars($bp) ?>/visits">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
         <div class="mb-3">
             <label class="form-label">Motivo</label>
@@ -41,7 +42,8 @@
         </div>
                 <?php
                     if (session_status() !== PHP_SESSION_ACTIVE) @session_start();
-                    $rolActual = $_SESSION['user']['rol'] ?? '';
+                    $sessUser = $_SESSION['user'] ?? null;
+                    $rolActual = is_array($sessUser) ? ($sessUser['rol'] ?? '') : '';
                 ?>
                 <?php if ($rolActual !== 'empleado'): ?>
                 <div class="mb-3">
@@ -71,7 +73,7 @@
         <button type="submit" class="btn btn-primary w-100">Guardar</button>
     </form>
     <p class="text-center mt-3">
-        <a href="<?= $GLOBALS['basePath'] ?>/visits" class="text-decoration-none text-secondary">Volver al listado</a>
+        <a href="<?= htmlspecialchars($bp) ?>/visits" class="text-decoration-none text-secondary">Volver al listado</a>
     </p>
   </div>
 </body>

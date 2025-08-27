@@ -11,7 +11,8 @@ class VisitorController
         if (!isset($_SESSION['user'])) {
             header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/login'); exit;
         }
-        $rol = $_SESSION['user']['rol'] ?? '';
+    $u = $_SESSION['user'] ?? null;
+    $rol = is_array($u) ? ($u['rol'] ?? '') : '';
         if (!in_array($rol, $roles, true)) {
             http_response_code(403);
             echo 'Acceso restringido.'; exit;

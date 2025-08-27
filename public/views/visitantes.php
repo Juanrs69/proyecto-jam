@@ -14,7 +14,8 @@
   <?php
     if (session_status() !== PHP_SESSION_ACTIVE) session_start();
     $bp = $GLOBALS['basePath'] ?? '';
-    $rolActual = $_SESSION['user']['rol'] ?? '';
+  $sessUser = $_SESSION['user'] ?? null;
+  $rolActual = is_array($sessUser) ? ($sessUser['rol'] ?? '') : '';
     $canCreate = in_array($rolActual, ['administrador','empleado','recepcionista'], true);
     $isAdmin = $rolActual === 'administrador';
     $pageTitle = 'Visitantes';

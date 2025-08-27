@@ -1,9 +1,12 @@
-<?php
+<?php // Panel de recepcionista
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $user = $_SESSION['user'] ?? null;
-if (!$user || ($user['rol'] ?? '') !== 'recepcionista') {
+$rolSafe = is_array($user) ? ($user['rol'] ?? '') : '';
+if (!is_array($user) || $rolSafe !== 'recepcionista') {
     header('Location: ' . ($GLOBALS['basePath'] ?? '') . '/login'); exit;
 }
+// Evitar bucle de inclusión con panel.php
+$fromRolePanel = true;
 $pdo = isset($pdo) && $pdo instanceof PDO ? $pdo : (require __DIR__ . '/../../src/Config/database.php');
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 $bp = $GLOBALS['basePath'] ?? '';
@@ -22,27 +25,28 @@ $section = $_GET['section'] ?? 'dashboard';
   <link href="<?= h($bp) ?>/assets/css/app.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>.sidebar .nav-link{color:#e5e7eb}</style>
 </head>
 <body class="bg-gray-100">
 <div class="container-fluid">
   <div class="row">
-    <nav class="col-md-3 col-lg-2 d-md-block py-4 px-2 sidebar">
+  <nav class="col-md-3 col-lg-2 d-md-block py-4 px-2 sidebar"> <!-- Sidebar -->
       <div class="text-center mb-4">
         <span class="fw-bold fs-5">VisitaSegura</span>
-        <div class="small mt-1"><?= h($user['nombre']) ?> <span class="badge bg-info">Recepcionista</span></div>
+        <div class="small mt-1"><?= h($user['nombre'] ?? '') ?> <span class="badge bg-info">Recepcionista</span></div>
       </div>
       <ul class="nav flex-column">
-  <li class="nav-item mb-2"><a class="nav-link<?= $section==='dashboard'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/recepcionista?section=dashboard">Dashboard</a></li>
-  <li class="nav-item mb-2"><a class="nav-link<?= $section==='visitantes'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/recepcionista?section=visitantes">Visitantes</a></li>
-  <li class="nav-item mb-2"><a class="nav-link<?= $section==='visitas'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/recepcionista?section=visitas">Visitas</a></li>
-  <li class="nav-item mb-2"><a class="nav-link<?= $section==='perfil'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/recepcionista?section=perfil">Perfil</a></li>
-  <li class="nav-item mb-2"><a class="nav-link<?= $section==='cambiar'?' active':'' ?>" style="color:#fff" href="<?= h($bp) ?>/panel/recepcionista?section=cambiar">Cambiar contraseña</a></li>
-        <li class="nav-item mt-4"><a class="nav-link text-danger" href="<?= h($bp) ?>/logout">Cerrar sesión</a></li>
+        <li class="nav-item mb-2"><a class="nav-link<?= $section==='dashboard'?' active':'' ?>" href="<?= h($bp) ?>/panel/recepcionista?section=dashboard"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+        <li class="nav-item mb-2"><a class="nav-link<?= $section==='visitantes'?' active':'' ?>" href="<?= h($bp) ?>/panel/recepcionista?section=visitantes"><i class="bi bi-people me-1"></i>Visitantes</a></li>
+        <li class="nav-item mb-2"><a class="nav-link<?= $section==='visitas'?' active':'' ?>" href="<?= h($bp) ?>/panel/recepcionista?section=visitas"><i class="bi bi-calendar-check me-1"></i>Visitas</a></li>
+        <li class="nav-item mb-2"><a class="nav-link<?= $section==='perfil'?' active':'' ?>" href="<?= h($bp) ?>/panel/recepcionista?section=perfil"><i class="bi bi-person-circle me-1"></i>Perfil</a></li>
+        <li class="nav-item mb-2"><a class="nav-link<?= $section==='cambiar'?' active':'' ?>" href="<?= h($bp) ?>/panel/recepcionista?section=cambiar"><i class="bi bi-key me-1"></i>Cambiar contraseña</a></li>
+        <li class="nav-item mt-4"><a class="nav-link text-danger" href="<?= h($bp) ?>/logout"><i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión</a></li>
       </ul>
     </nav>
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
       <?php include __DIR__ . '/partials/ui/toasts.php'; ?>
-      <?php
+  <?php
         $labelsHdr = [ 'dashboard'=>'Dashboard', 'visitantes'=>'Visitantes', 'visitas'=>'Visitas', 'perfil'=>'Perfil', 'cambiar'=>'Cambiar contraseña' ];
         $pageTitle = $labelsHdr[$section] ?? 'Panel';
         $breadcrumbs = [ ['label' => $pageTitle] ];
@@ -50,7 +54,7 @@ $section = $_GET['section'] ?? 'dashboard';
         include __DIR__ . '/partials/ui/header.php';
       ?>
       <?php
-      switch ($section) {
+  switch ($section) { // Router interno por sección
         case 'dashboard':
           $totalVisitantes = (int)$pdo->query("SELECT COUNT(*) FROM visitantes")->fetchColumn();
           $totalVisitas = (int)$pdo->query("SELECT COUNT(*) FROM visitas")->fetchColumn();
@@ -59,7 +63,7 @@ $section = $_GET['section'] ?? 'dashboard';
             <div class="col-md-4"><div class="card text-bg-success"><div class="card-body"><h5 class="card-title">Visitantes</h5><p class="fs-3 mb-0">'.$totalVisitantes.'</p></div></div></div>
             <div class="col-md-4"><div class="card text-bg-primary"><div class="card-body"><h5 class="card-title">Visitas</h5><p class="fs-3 mb-0">'.$totalVisitas.'</p></div></div></div>
           </div>
-          <div class="d-flex gap-2">
+          <div class="d-flex flex-wrap gap-2">
             <a class="btn btn-outline-primary" href="?section=visitas"><i class="bi bi-list-ul me-1"></i> Ir a Visitas</a>
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCrearVisitante"><i class="bi bi-person-plus me-1"></i> Nuevo visitante</button>
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCrearVisita"><i class="bi bi-calendar-plus me-1"></i> Nueva visita</button>
@@ -77,6 +81,7 @@ $section = $_GET['section'] ?? 'dashboard';
             ?>
             <h2>Agregar visitante</h2>
             <form method="post" action="?section=visitantes&action=crear" class="col-md-6 col-lg-5">
+              <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token'] ?? '') ?>">
               <div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" class="form-control" required></div>
               <div class="mb-3"><label class="form-label">Documento</label><input type="text" name="documento" class="form-control" required></div>
               <div class="mb-3"><label class="form-label">Empresa</label><input type="text" name="empresa" class="form-control"></div>
@@ -86,11 +91,11 @@ $section = $_GET['section'] ?? 'dashboard';
             <?php
           } else {
             $visitantes = $pdo->query("SELECT * FROM visitantes ORDER BY nombre")->fetchAll();
-      echo '<div class="d-flex gap-2 align-items-center mb-3">'
-        .'<h2 class="m-0">Visitantes</h2>'
-        .'<div class="ms-auto d-flex gap-2">'
-        .'<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCrearVisitante"><i class="bi bi-person-plus me-1"></i> Nuevo visitante</button>'
-        .'</div></div>';
+            echo '<div class="d-flex gap-2 align-items-center mb-3">'
+              .'<h2 class="m-0">Visitantes</h2>'
+              .'<div class="ms-auto d-flex gap-2">'
+              .'<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCrearVisitante"><i class="bi bi-person-plus me-1"></i> Nuevo visitante</button>'
+              .'</div></div>';
             echo '<div class="table-responsive"><table class="table table-striped table-bordered table-hover align-middle bg-white shadow-sm content-card">';
             echo '<thead class="table-light"><tr><th>Nombre</th><th>Documento</th><th>Empresa</th><th>Acciones</th></tr></thead><tbody>';
             foreach ($visitantes as $v) {
@@ -98,7 +103,12 @@ $section = $_GET['section'] ?? 'dashboard';
                 <td>'.h($v['nombre']).'</td>
                 <td>'.h($v['documento']).'</td>
                 <td>'.h($v['empresa']).'</td>
-                <td><a class="btn btn-sm btn-outline-info" href="'.h($bp).'/visitantes/'.urlencode($v['id']).'" target="_blank"><i class="bi bi-eye"></i> Ver visitas</a></td>
+                <td>
+                  <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalVerVisitas"
+                    data-id="'.h($v['id']).'" data-nombre="'.h($v['nombre']).'">
+                    <i class="bi bi-eye"></i> Ver visitas
+                  </button>
+                </td>
               </tr>';
             }
             echo '</tbody></table></div>';
@@ -117,6 +127,7 @@ $section = $_GET['section'] ?? 'dashboard';
             ?>
             <h2>Crear visita</h2>
             <form method="post" action="?section=visitas&action=crear" class="col-md-6 col-lg-5">
+              <input type="hidden" name="csrf_token" value="<?= h($_SESSION['csrf_token'] ?? '') ?>">
               <div class="mb-3"><label class="form-label">Motivo</label><input type="text" name="motivo" class="form-control" required></div>
               <div class="mb-3"><label class="form-label">Fecha</label><input type="datetime-local" name="fecha" class="form-control" required></div>
               <div class="mb-3"><label class="form-label">Departamento</label><input type="text" name="departamento" class="form-control" required></div>
@@ -142,11 +153,12 @@ $section = $_GET['section'] ?? 'dashboard';
               $st->execute($ids);
               foreach ($st->fetchAll() as $r) $documentos[$r['id']] = $r['documento'];
             }
-      echo '<div class="d-flex gap-2 align-items-center mb-3">'
-        .'<h2 class="m-0">Visitas</h2>'
-        .'<div class="ms-auto d-flex gap-2">'
-        .'<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCrearVisita"><i class="bi bi-calendar-plus me-1"></i> Nueva visita</button>'
-        .'</div></div>';
+            echo '<div class="d-flex gap-2 align-items-center mb-3">'
+              .'<h2 class="m-0">Visitas</h2>'
+              .'<div class="ms-auto d-flex flex-wrap gap-2">'
+              .'<a href="'.h($bp).'/visits/export" class="btn btn-outline-secondary"><i class="bi bi-filetype-csv me-1"></i> Exportar CSV</a>'
+              .'<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCrearVisita"><i class="bi bi-calendar-plus me-1"></i> Nueva visita</button>'
+              .'</div></div>';
             echo '<div class="table-responsive"><table class="table table-striped table-bordered table-hover align-middle bg-white shadow-sm content-card">';
             echo '<thead class="table-light"><tr><th>ID</th><th>Documento</th><th>Fecha</th><th>Salida</th><th>Motivo</th><th>Departamento</th><th>Estado</th></tr></thead><tbody>';
             foreach ($visitas as $vi) {
@@ -170,9 +182,9 @@ $section = $_GET['section'] ?? 'dashboard';
         case 'perfil':
           ?>
           <h2>Perfil</h2>
-          <div class="card"><div class="card-body">
-            <p><strong>Nombre:</strong> <?= h($user['nombre']) ?></p>
-            <p><strong>Correo:</strong> <?= h($user['correo']) ?></p>
+          <div class="card shadow-sm col-12 col-md-8 col-lg-6"><div class="card-body">
+            <p><strong>Nombre:</strong> <?= h($user['nombre'] ?? '-') ?></p>
+            <p><strong>Correo:</strong> <?= h($user['correo'] ?? '-') ?></p>
             <p><strong>Rol:</strong> <span class="badge bg-info">Recepcionista</span></p>
           </div></div>
           <?php
@@ -287,10 +299,38 @@ $section = $_GET['section'] ?? 'dashboard';
         </div>
       </div>
     </main>
+    <!-- Modal Ver visitas (iframe) -->
+    <div class="modal fade" id="modalVerVisitas" tabindex="-1" aria-labelledby="modalVerVisitasLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalVerVisitasLabel">Visitas de <span id="verVisitasNombre"></span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body p-0">
+            <iframe id="verVisitasIframe" src="" style="border:0;width:100%;height:70vh;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function(){
+        var modalVerVisitas = document.getElementById('modalVerVisitas');
+        if (!modalVerVisitas) return;
+        modalVerVisitas.addEventListener('show.bs.modal', function (event) {
+          var button = event.relatedTarget;
+          var id = button.getAttribute('data-id');
+          var nombre = button.getAttribute('data-nombre') || '';
+          document.getElementById('verVisitasNombre').textContent = nombre;
+          var bp = '<?= $GLOBALS['basePath'] ?? '' ?>';
+          document.getElementById('verVisitasIframe').src = (bp ? bp : '') + '/visitantes/' + encodeURIComponent(id);
+        });
+      })();
+    </script>
   </div>
 </div>
 <footer class="text-center text-muted small py-3 mt-4">&copy; <?= date('Y') ?> VisitaSegura. Todos los derechos reservados.</footer>
 </body>
 </html>
- 
+
 

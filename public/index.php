@@ -10,6 +10,15 @@ error_reporting(E_ALL);
 ini_set('log_errors', '1');
 ini_set('error_log', __DIR__ . '/php_error.log');
 
+// Asegurar sesión y sanear formato de usuario en sesión (esto debe correr SIEMPRE al inicio)
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    @session_start();
+}
+if (isset($_SESSION['user']) && !is_array($_SESSION['user'])) {
+    // Si por algún motivo quedó un string u otro tipo, lo descartamos para evitar offsets
+    unset($_SESSION['user']);
+}
+
 // Helper para escribir errores en el log de Apache
 function log_error($msg) {
     error_log("[VisitaSegura] " . $msg);

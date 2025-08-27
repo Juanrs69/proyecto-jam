@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manual Técnico - VisitaSegura</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+  body{background:#f8f9fa;font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif}
+    .toc a{text-decoration:none}
+    .hero{background:#20c997;color:#0b3d2e;border-radius:.5rem}
+    .mini{border:1px solid #dee2e6;border-radius:.25rem}
+  code{background:#e9ecef;color:#111;padding:.1rem .3rem;border-radius:.2rem;border:1px solid #dde1e6;font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+  pre{background:#f1f3f5;color:#212529;padding:1rem;border-radius:.5rem;overflow:auto;border:1px solid #dee2e6;font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+    @media print{
+      .d-print-none{display:none!important}
+      body{background:#fff!important}
+      .card,.hero{box-shadow:none!important}
+      a[href]:after{content:''}
+      pre{background:#fff!important;color:#000!important;border:1px solid #000!important}
+      code{background:#fff!important;color:#000!important;border:1px solid #000!important}
+    }
+  </style>
+</head>
+<body>
+<div class="position-fixed top-0 end-0 m-3 d-print-none">
+  <button class="btn btn-danger btn-sm" onclick="window.print()"><i class="bi bi-filetype-pdf me-1"></i>Imprimir/Guardar PDF</button>
+</div>
+<div class="container my-4">
+  <div class="hero p-4 mb-4 d-flex align-items-center justify-content-between">
+    <div>
+      <h1 class="h3 mb-1">Manual Técnico</h1>
+      <p class="mb-0">VisitaSegura — Arquitectura, rutas, seguridad y BD</p>
+    </div>
+    <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" class="mini bg-white p-1">
+      <rect x="0" y="0" width="120" height="80" fill="#f8f9fa"/>
+      <rect x="0" y="0" width="26" height="80" fill="#20c997"/>
+      <rect x="30" y="10" width="80" height="8" fill="#6c757d"/>
+      <rect x="30" y="24" width="70" height="6" fill="#adb5bd"/>
+      <rect x="30" y="34" width="70" height="6" fill="#adb5bd"/>
+      <rect x="30" y="44" width="70" height="6" fill="#adb5bd"/>
+    </svg>
+  </div>
+
+  <div class="row g-4">
+    <aside class="col-lg-3">
+      <div class="card">
+        <div class="card-header">Contenido</div>
+        <div class="list-group list-group-flush toc">
+          <a href="#estructura" class="list-group-item list-group-item-action"><i class="bi bi-diagram-3 me-1"></i> Estructura</a>
+          <a href="#rutas" class="list-group-item list-group-item-action"><i class="bi bi-signpost-2 me-1"></i> Rutas</a>
+          <a href="#seguridad" class="list-group-item list-group-item-action"><i class="bi bi-shield-lock me-1"></i> Seguridad</a>
+          <a href="#bd" class="list-group-item list-group-item-action"><i class="bi bi-database me-1"></i> Base de datos</a>
+          <a href="#notificaciones" class="list-group-item list-group-item-action"><i class="bi bi-bell me-1"></i> Notificaciones</a>
+          <a href="#despliegue" class="list-group-item list-group-item-action"><i class="bi bi-hdd-network me-1"></i> Despliegue XAMPP</a>
+          <a href="#troubleshooting" class="list-group-item list-group-item-action"><i class="bi bi-tools me-1"></i> Troubleshooting</a>
+        </div>
+      </div>
+    </aside>
+    <main class="col-lg-9">
+      <section id="estructura" class="mb-4">
+        <h2 class="h4">Estructura</h2>
+        <pre><code>public/
+  index.php
+  views/
+    login.php, panel.php, panel_empleado.php, panel_recepcionista.php, ...
+src/
+  Config/
+    database.php, routes.php
+  Controller/
+    AuthController.php, VisitController.php, VisitorController.php
+</code></pre>
+        <p>Patrón MVC ligero: rutas → controlador → vista, con PDO para MySQL.</p>
+      </section>
+
+      <section id="rutas" class="mb-4">
+        <h2 class="h4">Rutas</h2>
+        <h3 class="h6 mt-3">CSRF tokens</h3>
+        <p>Se genera un token por sesión y se incluye en cada formulario de mutación. El servidor valida que el token recibido coincida con el token de la sesión antes de procesar.</p>
+        <pre><code>// Generación (ej. en bootstrap de sesión)
+        </ul>
+      </section>
+
+      <section id="seguridad" class="mb-4">
+        <h2 class="h4">Seguridad</h2>
+  <p>CSRF (Cross-Site Request Forgery) es un ataque en el que un sitio externo intenta que el navegador del usuario ejecute acciones no deseadas en una aplicación donde ya tiene sesión iniciada. Para evitarlo, la aplicación incluye en cada formulario un token CSRF: un valor aleatorio ligado a la sesión que el servidor valida al recibir la petición. Si el token no coincide, la operación se bloquea, impidiendo que terceros disparen acciones en nombre del usuario.</p>
+        <ul>
+          <li>Sesiones seguras, controles por rol.</li>
+          <li>CSRF tokens en todas las mutaciones (método POST).</li>
+          <li>Cabeceras y redirecciones controladas para evitar salto de página fuera del panel.</li>
+        </ul>
+      </section>
+
+      <section id="bd" class="mb-4">
+        <h2 class="h4">Base de datos</h2>
+        <ul>
+          <li>Obligatorio en POST/PUT/PATCH/DELETE.</li>
+          <li>Regenerar la sesión al iniciar/cerrar sesión.</li>
+          <li>Evitar tokens en URL; usarlos en el cuerpo del formulario.</li>
+        </ul>
+        <h3 class="h6 mt-3">Otras medidas</h3>
+        <ul>
+          <li>Sesiones seguras y controles por rol en rutas sensibles.</li>
+          <li>Forzar métodos POST en acciones con efectos secundarios.</li>
+          <li>Redirecciones con Referer validado para mantener UX dentro del panel.</li>
+        </ul>
+        <p>Tabla <code>visitas</code> con columnas: <em>visitante_id, fecha, motivo, departamento, estado, salida, autorizado_por, anfitrion_id</em>.</p>
+        <p>El controlador asegura columnas ausentes con una rutina idempotente.</p>
+        <details>
+          <summary>SQL de migración (XAMPP)</summary>
+          <pre><code>-- Ver docs/sql-migraciones-xampp.sql en el repositorio
+ALTER TABLE visitas
+  ADD COLUMN IF NOT EXISTS salida DATETIME NULL,
+  ADD COLUMN IF NOT EXISTS estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+  ADD COLUMN IF NOT EXISTS autorizado_por INT NULL,
+  ADD COLUMN IF NOT EXISTS anfitrion_id INT NULL;
+</code></pre>
+        </details>
+      </section>
+
+      <section id="notificaciones" class="mb-4">
+        <h2 class="h4">Notificaciones</h2>
+        <ul>
+          <li>Tabla de notificaciones con marca de leídas.</li>
+          <li>Campana en el encabezado con badge y listado en modal.</li>
+        </ul>
+      </section>
+
+      <section id="despliegue" class="mb-4">
+        <h2 class="h4">Despliegue en XAMPP</h2>
+        <ol>
+          <li>Clonar/copiar en <code>c:/xampp/htdocs/visita-segura</code>.</li>
+          <li>Crear BD y ejecutar <code>docs/sql-migraciones-xampp.sql</code>.</li>
+          <li>Configurar credenciales en <code>src/Config/database.php</code>.</li>
+          <li>Abrir <code>http://localhost/visita-segura/public/</code>.</li>
+        </ol>
+      </section>
+
+      <section id="troubleshooting" class="mb-4">
+        <h2 class="h4">Troubleshooting</h2>
+        <ul>
+          <li>Errores de redeclaración: verifica includes únicos y espacios de nombres.</li>
+          <li>CSRF inválido: limpia caché del navegador o reinicia sesión.</li>
+          <li>Columnas faltantes: ejecuta la migración de SQL o ingresa al panel para autoasegurar.</li>
+        </ul>
+      </section>
+
+      <div class="text-end">
+        <a class="btn btn-outline-secondary" href="../login">Volver al login</a>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+  (function(){
+    try{const p=new URLSearchParams(location.search);if(p.get('print')==='1'){setTimeout(()=>window.print(),300);}}catch(e){}
+  })();
+</script>
+</body>
+</html>
