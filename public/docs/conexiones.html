@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VisitaSegura — Conexiones y Flujo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body{background:#f8f9fa}
+    pre{background:#0b1020;color:#e6e8ef;border-radius:.5rem;padding:1rem;overflow:auto}
+    code{color:#ffdd57}
+    .card{box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    @media print{.no-print{display:none!important}}
+  </style>
+</head>
+<body>
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Conexiones y flujo del sistema</h1>
+    <div class="no-print d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="./"><i class="bi bi-arrow-left"></i> Docs</a>
+      <button class="btn btn-danger" onclick="window.print()"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">1) Conexión a Base de Datos (PDO)</h2>
+      <p>Archivo: <code>src/Config/database.php</code>. Se configura DSN <em>MySQL</em> con <strong>PDO</strong>, errores con excepciones y fetch asociativo.</p>
+<pre><code>$host='127.0.0.1'; $dbname='visita_segura'; $user='root'; $pass='';
+$dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
+$pdo = new PDO($dsn, $user, $pass, [
+  PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,
+  PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,
+]);
+return $pdo;</code></pre>
+      <ul class="small text-muted">
+        <li>Entorno: XAMPP (Apache + MySQL/MariaDB) local.</li>
+        <li>Si falla: verificar credenciales, existencia de BD y privilegios.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">2) Front controller y bootstrap</h2>
+      <p>Archivo: <code>public/index.php</code>. Carga <code>database.php</code> y <code>routes.php</code>, registra autoloader, resuelve la ruta y despacha al controlador.</p>
+<pre><code>$pdo = require __DIR__.'/../src/Config/database.php';
+$routes = require __DIR__.'/../src/Config/routes.php';
+// ... autoloader PSR-like de Controller ...
+// Detectar método/URI, buscar en $routes['GET'|'POST'|...] y ejecutar [Clase, metodo]
+</code></pre>
+      <p class="small text-muted mb-0">Registra errores en <code>public/php_error.log</code>; usa <code>$GLOBALS['basePath']</code> para redirecciones seguras.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">3) Rutas</h2>
+      <p>Archivo: <code>src/Config/routes.php</code>. Devuelve un array con grupos: <code>GET</code>, <code>POST</code>, <code>GET_PARAM</code> y <code>POST_PARAM</code>.</p>
+<pre><code>return [
+  'GET' => [ '/login' => [AuthController::class,'showLogin'], '/visits' => [VisitController::class,'index'], ...],
+  'POST'=> [ '/login' => [AuthController::class,'login'], '/visits' => [VisitController::class,'store'], ...],
+  'GET_PARAM'  => [ '/visits/{id}' => [VisitController::class,'show'], ...],
+  'POST_PARAM' => [ '/visits/{id}/edit' => [VisitController::class,'update'], ...],
+];</code></pre>
+      <p class="small text-muted mb-0">Los parámetros se extraen con patrones tipo <code>{id}</code>.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">4) Controladores → Vistas</h2>
+      <p>Cada controlador recibe <code>PDO</code> en el constructor, valida sesión/roles y renderiza vistas PHP.</p>
+<pre><code>// Ej.: listar visitas
+public function index(){
+  $this->requireRoles(['administrador','empleado','recepcionista']);
+  $stmt = $this->pdo->prepare("SELECT v.*, u.nombre empleado_nombre FROM visitas v LEFT JOIN usuarios u ON u.id=v.anfitrion_id ...");
+  $stmt->execute($params); $visitas=$stmt->fetchAll();
+  ob_start(); include __DIR__.'/../../public/views/visits.php'; return ob_get_clean();
+}</code></pre>
+      <ul class="small text-muted">
+        <li><strong>AuthController</strong>: login/logout, panel y registro.</li>
+        <li><strong>VisitController</strong>: CRUD de visitas, autorizar/rechazar, salida, export CSV.</li>
+        <li><strong>VisitorController</strong>: CRUD de visitantes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">5) Seguridad (CSRF y roles)</h2>
+      <ul>
+        <li>Se genera <code>$_SESSION['csrf_token']</code> al cargar formularios (p. ej. login/registro).</li>
+        <li>Todos los <strong>POST</strong> de mutación validan <code>hash_equals</code> contra el token en sesión.</li>
+        <li>Control de acceso por rol: <code>administrador</code>, <code>empleado</code>, <code>recepcionista</code>.</li>
+      </ul>
+<pre><code>// Validación típica en POST
+$csrf = $_POST['csrf_token'] ?? '';
+if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
+  http_response_code(400); echo 'CSRF inválido'; exit;
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">6) Tablas clave</h2>
+      <ul>
+        <li><code>usuarios</code>: credenciales y rol.</li>
+        <li><code>visitantes</code>: datos de visitantes.</li>
+        <li><code>visitas</code>: fecha/motivo/departamento/estado/salida/anfitrion_id.</li>
+        <li><code>notifications</code>: notificaciones por usuario (id, user_id, title, body, read_at).</li>
+      </ul>
+      <p class="small text-muted mb-0">Migración canónica: <code>database/sql/2025-08-26_notifications_and_visitas_alter.sql</code>.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">7) Notificaciones y acciones</h2>
+      <p>Se insertan registros en <code>notifications</code> cuando hay eventos (p. ej. nueva visita al anfitrión). Vista de notificaciones y acción para marcarlas como leídas.</p>
+      <p class="small text-muted mb-0">Rutas: <code>/notificaciones</code> (GET) y <code>/notificaciones/leer-todas</code> (POST).</p>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5">8) Flujo rápido para explicar al profe</h2>
+      <ol>
+        <li>Index carga PDO y rutas → resuelve controlador según URL.</li>
+        <li>Controlador valida sesión/rol y CSRF (si POST).</li>
+        <li>Consulta/actualiza con <em>PDO preparado</em> → renderiza vista.</li>
+        <li>UI usa modales, toasts y mantiene el panel sin recargas completas.</li>
+        <li>Evidencia: CSV, estado de visitas y marca de salida.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="text-center text-muted small mb-4">VisitaSegura · XAMPP · PHP 8 · MySQL · 2025</div>
+</div>
+</body>
+</html>
