@@ -88,3 +88,12 @@
 [27-Aug-2025 21:58:42 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
 [27-Aug-2025 21:59:18 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
 [27-Aug-2025 22:00:17 Europe/Berlin] [VisitaSegura] 404 en URI: /visita-segura/public/docs/proyecto-jam/proyectojam.html - procesada como /docs/proyecto-jam/proyectojam.html
+[28-Aug-2025 01:42:52 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitorController.php on line 95
+[28-Aug-2025 03:07:24 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitController.php on line 79
+[28-Aug-2025 03:23:48 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitorController.php on line 95
+[28-Aug-2025 03:27:58 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitController.php on line 79
+[28-Aug-2025 04:39:51 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitorController.php on line 95
+[28-Aug-2025 04:40:11 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitorController.php on line 29
+[28-Aug-2025 04:41:29 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitorController.php on line 95
+[28-Aug-2025 16:43:35 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitorController.php on line 95
+[28-Aug-2025 16:49:11 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\visita-segura\src\Controller\VisitController.php on line 258

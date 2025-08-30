@@ -1,0 +1,28 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# PHP / Composer
+vendor/
+composer.lock
+
+# Node
+node_modules/
+
+# Logs & cache
+*.log
+public/php_error.log
+storage/
+.cache/
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.zip
+*.tar.gz
+docs/*.sql

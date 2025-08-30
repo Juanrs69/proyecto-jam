@@ -26,7 +26,7 @@ class VisitorController
 
     public function index()
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -41,7 +41,7 @@ class VisitorController
 
     public function showCreateForm()
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -58,7 +58,7 @@ class VisitorController
 
     public function store()
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -92,7 +92,7 @@ class VisitorController
 
     public function show($id)
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -108,7 +108,7 @@ class VisitorController
 
     public function showEditForm($id)
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -126,7 +126,7 @@ class VisitorController
 
     public function update($id)
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -166,7 +166,7 @@ class VisitorController
 
     public function delete($id)
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;

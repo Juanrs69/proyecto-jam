@@ -76,7 +76,7 @@ class VisitController
      */
     public function index()
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login'); exit;
         }
@@ -152,7 +152,7 @@ class VisitController
      */
     public function showCreateForm()
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -177,7 +177,7 @@ class VisitController
      */
     public function store()
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -254,8 +254,7 @@ class VisitController
     {
         // Permitir a admin/empleado/recepcionista ver detalle
         $this->requireRoles(['administrador','empleado','recepcionista']);
-
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -279,7 +278,7 @@ class VisitController
     public function showEditForm($id)
     {
         $this->requireAdmin();
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -307,7 +306,7 @@ class VisitController
     public function update($id)
     {
         $this->requireAdmin();
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;
@@ -606,7 +605,7 @@ class VisitController
      */
     public function delete($id)
     {
-        session_start();
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (!isset($_SESSION['user'])) {
             header('Location: ' . $GLOBALS['basePath'] . '/login');
             exit;

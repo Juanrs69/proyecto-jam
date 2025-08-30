@@ -169,6 +169,9 @@ $uid = is_array($user) ? ($user['id'] ?? null) : null;
                   </td>
                   <td><?= h($v['salida'] ?? '-') ?></td>
                   <td class="text-nowrap">
+                    <button class="btn btn-sm btn-outline-primary" title="Ver" data-bs-toggle="modal" data-bs-target="#modalVerVisita" data-id="<?= h($v['id']) ?>">
+                      <i class="bi bi-eye"></i>
+                    </button>
                     <?php if (($v['estado'] ?? '') === 'pendiente'): ?>
                       <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalAutorizarVisita" data-id="<?= h($v['id']) ?>" data-decision="autorizar"><i class="bi bi-check2"></i></button>
                       <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalAutorizarVisita" data-id="<?= h($v['id']) ?>" data-decision="rechazar"><i class="bi bi-x"></i></button>

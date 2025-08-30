@@ -47,6 +47,21 @@ $bp = $GLOBALS['basePath'] ?? '';
   </div>
 </div>
 
+  <!-- Modal Ver visita (iframe para evitar recarga completa) -->
+  <div class="modal fade" id="modalVerVisita" tabindex="-1" aria-hidden="true" aria-labelledby="modalVerVisitaLabel">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalVerVisitaLabel">Detalle de visita</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body p-0">
+          <iframe id="iframeVerVisita" src="" style="border:0;width:100%;height:70vh" loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>
+    </div>
+
 <script>
 // Autorizar / Rechazar
 (function(){
@@ -74,6 +89,23 @@ $bp = $GLOBALS['basePath'] ?? '';
     var id = button.getAttribute('data-id');
     var form = document.getElementById('formSalidaVisita');
     form.action = '<?= htmlspecialchars($bp) ?>/visits/' + encodeURIComponent(id) + '/exit';
+  });
+})();
+
+// Ver visita (carga detalle en iframe)
+(function(){
+  var modalVer = document.getElementById('modalVerVisita');
+  if (!modalVer) return;
+  var iframe = document.getElementById('iframeVerVisita');
+  modalVer.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget;
+    if (!button) return;
+    var id = button.getAttribute('data-id');
+    if (!id) return;
+    iframe.src = '<?= htmlspecialchars($bp) ?>/visits/' + encodeURIComponent(id);
+  });
+  modalVer.addEventListener('hidden.bs.modal', function(){
+    iframe.src = '';
   });
 })();
 </script>
