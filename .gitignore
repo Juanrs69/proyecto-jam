@@ -22,6 +22,11 @@ storage/
 .env.local
 .env.*.local
 
+# C++ executables
+tutorial/fase1/contador_cpp
+tutorial/fase2/codigo_errores_cpp_original
+tutorial/fase2/codigo_errores_cpp_corregido
+
 # Misc
 *.zip
 *.tar.gz
